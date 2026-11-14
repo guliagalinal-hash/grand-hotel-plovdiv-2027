@@ -64,13 +64,22 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
   const dinner = c.dinnerOnly;
   const basePrice = PRICES[c.product][c.room][c.occ][c.nights - 1];
-  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : (c.children || c.infants || c.adults > 2 || (c.adults === 2 && c.occ === 'single') || (c.adults === 1 && c.occ === 'double') ? null : (c.occ === 'double' ? basePrice * 2 : basePrice));
+  const standardDouble = c.occ === 'double' && c.adults === 2;
+  const standardSingle = c.occ === 'single' && c.adults === 1;
+  const knownAdultSubtotal = standardDouble ? basePrice * 2 : standardSingle ? basePrice : c.occ === 'double' ? basePrice * Math.min(c.adults, 2) : basePrice;
+  const extraChildren = !dinner && c.children > 0;
+  const extraAdults = !dinner && (c.adults > 2 || (c.occ === 'single' && c.adults > 1));
+  const adultPlacementNeedsCheck = !dinner && !(standardDouble || standardSingle);
+  const needsConfirmation = extraChildren || extraAdults || adultPlacementNeedsCheck;
+  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : needsConfirmation ? null : knownAdultSubtotal;
+  const visibleSubtotal = dinner ? familyPrice! : knownAdultSubtotal;
+
   const adjust = (value: number, delta: number, setter: (n: number) => void, min: number) => setter(Math.max(min, Math.min(10, value + delta)));
   const product = c.product;
   const incl = product === 'accommodation' ? k.includesA : k.includesB;
   const occLabel = c.occ === 'double' ? label('Двухместный номер', 'Двойна стая') : label('Одноместное размещение', 'Единично настаняване');
   const perPerson = !dinner && c.occ === 'double' ? eur(PRICES[product][c.room].double[c.nights - 1]) : null;
-  const oneBedOnly = !dinner && c.occ === 'double' && c.adults === 1 && c.children === 0 && c.infants === 0;
+
   const guestLabel = label(`${c.adults} взрослых, ${c.children} детей 2–11 лет, ${c.infants} детей до 2 лет`, `${c.adults} възрастни, ${c.children} деца 2–11 г., ${c.infants} деца под 2 г.`);
   return (
     <div className={'calc calc--' + product} aria-labelledby={compact ? "calc-h-lower" : "calc-h-upper"}>
@@ -107,11 +116,12 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
       <div className="calc__result">
         <div role="status" aria-live="polite">
           <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}; ${guestLabel}`}</span>
-          <strong className="calc__price" data-testid="price">{familyPrice === null ? (oneBedOnly ? perPerson : label('Стоимость уточняется', 'Цената се уточнява')) : eur(familyPrice)}</strong>
-          <span className="calc__per">{familyPrice === null ? (oneBedOnly ? label('Цена за одно место в двухместном номере; размещение одного гостя требует подтверждения', 'Цена за едно легло в двойна стая; настаняването на един гост подлежи на потвърждение') : label('Итог зависит от состава гостей и условий размещения', 'Крайната цена зависи от броя гости и условията за настаняване')) : label(`Итого за ${guestLabel}`, `Общо за ${guestLabel}`)}</span>
-          {perPerson && !dinner && !oneBedOnly && <p className="note">{label(`Тариф за 1 человека при двухместном размещении: ${perPerson}. Итог для двух взрослых: ${eur(PRICES[product][c.room].double[c.nights - 1] * 2)}.`, `Цена на човек в двойна стая: ${perPerson}. Общо за двама възрастни: ${eur(PRICES[product][c.room].double[c.nights - 1] * 2)}.`)}</p>}
+          <strong className="calc__price" data-testid="price">{eur(visibleSubtotal)}</strong>
+          <span className="calc__per">{needsConfirmation ? label('Известная часть стоимости, не окончательный итог', 'Известната част от цената, не окончателна сума') : label(`Итого за ${guestLabel}`, `Общо за ${guestLabel}`)}</span>
+          {!dinner && <p className="note">{c.occ === 'double' ? label(`Тариф за взрослого на одном месте в двухместном номере: ${perPerson}.`, `Цена за възрастен на легло в двойна стая: ${perPerson}.`) : label('Тариф за одноместное размещение.', 'Цена за единично настаняване.')}</p>}
+          {!dinner && c.infants > 0 && <p className="note">{label('Дети до 2 лет бесплатно. Возможность размещения подтверждается отелем.', 'Деца под 2 години безплатно. Настаняването се потвърждава от хотела.')}</p>}
+          {needsConfirmation && <p className="note">{label('Полная стоимость с учётом детей, дополнительных мест и размещения будет подтверждена отелем. Вы можете отправить заявку сейчас.', 'Пълната цена с деца, допълнителни легла и настаняване ще бъде потвърдена от хотела. Можете да изпратите запитване сега.')}</p>}
           {!dinner && <p className={'banner ' + (product === 'package' ? 'banner--yes' : 'banner--no')}>{product === 'package' ? k.flagB : k.flagA}</p>}
-          {familyPrice === null && <p className="note">{label('Размещение детей и дополнительные места уточняются при подтверждении заявки.', 'Настаняването на деца и допълнителните легла се уточняват при потвърждаване на запитването.')}</p>}
         </div>
         {!dinner && <><h4>{k.includes}</h4>
         <ul className="ticks ticks--dark">{incl.map((x) => <li key={x}>{x}</li>)}</ul>
@@ -120,7 +130,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           <button type="button" className="btn btn--lg btn--toggle" aria-expanded={open} aria-controls="all-prices" onClick={onToggle}>
             {k.showAll}<span className="chev" aria-hidden="true" />
           </button>
-          <a className="btn btn--outline" href="#apply">{k.request}</a>
+          <a className="btn btn--outline" href="#apply">{label("Продолжить к заявке", "Продължи към запитване")}</a>
         </div>}
       </div>
     </div>
