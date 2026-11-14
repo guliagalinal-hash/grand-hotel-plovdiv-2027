@@ -66,13 +66,14 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const basePrice = PRICES[c.product][c.room][c.occ][c.nights - 1];
   const standardDouble = c.occ === 'double' && c.adults === 2;
   const standardSingle = c.occ === 'single' && c.adults === 1;
-  const knownAdultSubtotal = standardDouble ? basePrice * 2 : standardSingle ? basePrice : c.occ === 'double' ? basePrice * Math.min(c.adults, 2) : basePrice;
-  const extraChildren = !dinner && c.children > 0;
-  const extraAdults = !dinner && (c.adults > 2 || (c.occ === 'single' && c.adults > 1));
-  const adultPlacementNeedsCheck = !dinner && !(standardDouble || standardSingle);
-  const needsConfirmation = extraChildren || extraAdults || adultPlacementNeedsCheck;
-  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : needsConfirmation ? null : knownAdultSubtotal;
-  const visibleSubtotal = dinner ? familyPrice! : knownAdultSubtotal;
+  const baseAdults = standardDouble ? basePrice * 2 : standardSingle ? basePrice : c.occ === 'double' ? basePrice * Math.min(c.adults, 2) : basePrice;
+  // Published child accommodation tariff is 70% of the standard double-bed accommodation price.
+  // For the gala package, the child's gala cover (132 EUR) is added separately.
+  const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
+  const childGala = c.product === 'package' ? c.children * 132 : 0;
+  const needsConfirmation = !dinner && !(standardDouble || standardSingle);
+  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : baseAdults + childStay + childGala;
+  const visibleSubtotal = familyPrice;
 
   const adjust = (value: number, delta: number, setter: (n: number) => void, min: number) => setter(Math.max(min, Math.min(10, value + delta)));
   const product = c.product;
@@ -118,10 +119,11 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
         <div role="status" aria-live="polite">
           <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}; ${guestLabel}`}</span>
           <strong className="calc__price" data-testid="price">{eur(visibleSubtotal)}</strong>
-          <span className="calc__per">{needsConfirmation ? label('Известная часть стоимости, не окончательный итог', 'Известната част от цената, не окончателна сума') : label(`Итого за ${guestLabel}`, `Общо за ${guestLabel}`)}</span>
+          <span className="calc__per">{needsConfirmation ? label("Предварительная сумма, размещение требует подтверждения", "Предварителна сума, настаняването подлежи на потвърждение") : label(`Итого за ${guestLabel}`, `Общо за ${guestLabel}`)}</span>
           {!dinner && <p className="note">{c.occ === 'double' ? label(`Тариф за взрослого на одном месте в двухместном номере: ${perPerson}.`, `Цена за възрастен на легло в двойна стая: ${perPerson}.`) : label('Тариф за одноместное размещение.', 'Цена за единично настаняване.')}</p>}
+          {!dinner && c.children > 0 && <p className="note">{label(`Дети 2–11 лет: проживание 70% от тарифа места в двухместном номере (${eur(childStay)})${product === "package" ? ` + гала-ужин ${eur(childGala)}` : ""}.`, `Деца 2–11 г.: нощувка 70% от цената на легло в двойна стая (${eur(childStay)})${product === "package" ? ` + гала вечеря ${eur(childGala)}` : ""}.`)}</p>}
           {!dinner && c.infants > 0 && <p className="note">{label('Дети до 2 лет бесплатно. Возможность размещения подтверждается отелем.', 'Деца под 2 години безплатно. Настаняването се потвърждава от хотела.')}</p>}
-          {needsConfirmation && <p className="note">{label('Полная стоимость с учётом детей, дополнительных мест и размещения будет подтверждена отелем. Вы можете отправить заявку сейчас.', 'Пълната цена с деца, допълнителни легла и настаняване ще бъде потвърдена от хотела. Можете да изпратите запитване сега.')}</p>}
+          {needsConfirmation && <p className="note">{label('Стоимость дополнительных взрослых и условия размещения подтвердит отель. Вы можете отправить заявку сейчас.', 'Цената за допълнителни възрастни и условията за настаняване ще бъдат потвърдени от хотела. Можете да изпратите запитване сега.')}</p>}
           {!dinner && <p className={'banner ' + (product === 'package' ? 'banner--yes' : 'banner--no')}>{product === 'package' ? k.flagB : k.flagA}</p>}
         </div>
         {!dinner && <><h4>{k.includes}</h4>
