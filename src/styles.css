@@ -295,3 +295,12 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 /* Calculator: make the next step obvious on narrow screens */
 .calc__view-result{display:none}
 @media(max-width:1000px){.calc__view-result{display:block;width:100%;background:var(--teal);color:var(--milk);text-align:center}.calc__result{scroll-margin-top:calc(var(--hdr) + 18px)}.calc__price{font-size:clamp(38px,10vw,64px);overflow-wrap:anywhere}}
+
+/* Compact, readable booking recap in the inquiry form (no nested calculator) */
+.booking-summary{background:#f8f4ed;color:#18313d;border:1px solid #cdbda9;border-radius:8px;padding:clamp(16px,3vw,28px);margin-bottom:24px;overflow-wrap:anywhere}
+.booking-summary h3{color:#18313d;font-size:clamp(22px,2vw,30px);margin:0 0 12px}
+.booking-summary p{color:#18313d;margin:8px 0;line-height:1.5;font-size:16px}
+.booking-summary__price{display:block;font-size:clamp(32px,5vw,52px);line-height:1.2;color:#18313d;margin:14px 0 10px;overflow-wrap:anywhere}
+.booking-summary .booking-summary__note{font-size:14px}
+.booking-summary__edit{display:inline-block;color:#18313d;text-decoration:underline;font-weight:700;margin-top:12px}
+#apply{scroll-margin-top:100px}
