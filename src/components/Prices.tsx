@@ -111,9 +111,10 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           [label('Дети 2–11 лет', 'Деца 2–11 г.'), c.children, c.setChildren, 0],
           [label('Дети до 2 лет', 'Деца под 2 г.'), c.infants, c.setInfants, 0],
         ] as const).map(([name, value, setter, min]) => <div key={name} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => adjust(value, -1, setter, min)}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => adjust(value, 1, setter, min)}>+</button></div></div>)}</fieldset>
+        <button type="button" className="btn calc__view-result" onClick={() => document.getElementById("calculator-result")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" })}>{label("Посмотреть стоимость ↓", "Виж цената ↓")}</button>
       </div>
 
-      <div className="calc__result">
+      <div className="calc__result" id={compact ? undefined : "calculator-result"}>
         <div role="status" aria-live="polite">
           <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}; ${guestLabel}`}</span>
           <strong className="calc__price" data-testid="price">{eur(visibleSubtotal)}</strong>
