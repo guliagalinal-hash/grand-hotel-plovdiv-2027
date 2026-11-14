@@ -62,9 +62,9 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const incl = product === 'accommodation' ? k.includesA : k.includesB;
   const occLabel = c.occ === 'double' ? k.occDouble : k.occSingle;
   return (
-    <div className={'calc calc--' + product} aria-labelledby="calc-h">
+    <div className={'calc calc--' + product} aria-labelledby={compact ? "calc-h-lower" : "calc-h-upper"}>
       <div className="calc__controls">
-        <h3 id="calc-h">{k.title}</h3>
+        <h3 id={compact ? "calc-h-lower" : "calc-h-upper"}>{k.title}</h3>
         <fieldset><legend>{label('Тип заявки', 'Вид запитване')}</legend><div className="seg seg--wide"><button type="button" aria-pressed={!dinner} onClick={() => c.setDinnerOnly(false)}>{label('Проживание / пакет', 'Нощувки / пакет')}</button><button type="button" aria-pressed={dinner} onClick={() => c.setDinnerOnly(true)}>{label('Только гала-ужин', 'Само гала вечеря')}</button></div></fieldset>
         {!dinner && <>
         <fieldset>
