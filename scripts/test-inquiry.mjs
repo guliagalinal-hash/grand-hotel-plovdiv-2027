@@ -18,7 +18,7 @@ globalThis.fetch = async (url, init) => {
 const logs = []; for (const k of ['log', 'error', 'warn', 'info']) console[k] = (...a) => logs.push(a.join(' '));
 
 let ipN = 0;
-const body = (o = {}) => ({ name: 'Ivan Petrov', email: 'ivan@example.com', phone: '+359 88 123 4567', comment: 'Hello', consent: true, pageLang: 'ru',
+const body = (o = {}) => ({ booking: { product: 'accommodation', nights: 1, room: 'classic', occupancy: 'double', adults: 2, children: 0, infants: 0, estimatedTotal: 1 }, name: 'Ivan Petrov', email: 'ivan@example.com', phone: '+359 88 123 4567', comment: 'Hello', consent: true, pageLang: 'ru',
   submissionId: 'sub-' + Math.random().toString(36).slice(2) + '-xx', turnstileToken: 'tok', website: '', ...o });
 const post = (b, { env = ENV, ip = '10.0.0.' + ++ipN, origin = 'https://site.test', headers = {} } = {}) =>
   fn.onRequestPost({ env: { ...env }, request: new Request('https://site.test/api/inquiry', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, 'CF-Connecting-IP': ip, ...headers }, body: typeof b === 'string' ? b : JSON.stringify(b) }) });
@@ -54,8 +54,9 @@ reset(); {
   assert.ok(sent.htmlContent.includes('&lt;script&gt;') && !sent.htmlContent.includes('<script>'), 'html escaped');
   assert.ok(sent.htmlContent.includes('&lt;b&gt;hi&lt;/b&gt;'));
   for (const must of ['Русский', 'Дата и время', 'Ivan', 'ivan@example.com', '+359 88 123 4567', '<b>hi</b>']) assert.ok(sent.textContent.includes(must), 'email contains ' + must);
-  assert.ok(!sent.textContent.includes('Рассчитанная цена') && !sent.textContent.includes('1 €'), 'no price data accepted from the browser');
-} ok('success: Brevo payload, sender/recipient/Reply-To, escaping, only the 4 fields used');
+  assert.ok(sent.textContent.includes('143.30 EUR'), 'server recomputes total rather than trusting browser value');
+  assert.ok(!sent.textContent.includes('1 €'), 'browser supplied price is ignored');
+} ok('success: Brevo payload, sender/recipient/Reply-To, escaping, booking parameters validated and server price recomputed');
 reset(); { const r = await post(body({ pageLang: 'bg' })); assert.equal(r.status, 200); assert.ok(JSON.parse(brevoCalls()[0].init.body).textContent.includes('Болгарский (/bg/)')); } ok('BG page language is reported in the e-mail');
 
 reset(); { const id = 'dup-0001-aaaa'; assert.equal((await post(body({ submissionId: id }), { ip: '9.9.9.9' })).status, 200); const r2 = await post(body({ submissionId: id }), { ip: '9.9.9.8' }); assert.equal(r2.status, 200); assert.equal((await r2.json()).duplicate, true); assert.equal(brevoCalls().length, 1); } ok('duplicate submissionId → one e-mail only');
