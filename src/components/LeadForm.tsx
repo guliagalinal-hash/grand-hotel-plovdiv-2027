@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSite, useCalc } from '../context';
-import { Calculator } from './Prices';
+import { eur } from '../data/prices';
 import { PRICES } from '../data/prices';
 import { config } from '../config';
 import { ContactCard } from './Sections';
@@ -18,6 +18,13 @@ export function LeadForm() {
   const { t, lang } = useSite();
   const c = useCalc();
   const f = t.form;
+  const bg = lang === 'bg';
+  const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
+  const adultRate = PRICES[c.product][c.room][c.occ][c.nights - 1];
+  const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
+  const calculatedTotal = c.dinnerOnly ? c.adults * 220 + c.children * 132 : adultRate * (c.occ === 'double' ? Math.min(c.adults, 2) : 1) + childStay + (c.product === 'package' ? c.children * 132 : 0);
+  const placementNeedsCheck = !c.dinnerOnly && !((c.occ === 'double' && c.adults === 2) || (c.occ === 'single' && c.adults === 1));
+  const offerName = c.dinnerOnly ? label('Только гала-ужин', 'Само гала вечеря') : c.product === 'package' ? label('Проживание с гала-ужином', 'Нощувки с гала вечеря') : label('Проживание без гала-ужина', 'Нощувки без гала вечеря');
   const [v, setV] = useState<Values>({ name: '', email: '', phone: '', comment: '', consent: false, website: '' });
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>('idle');
@@ -73,8 +80,7 @@ export function LeadForm() {
     if (!submissionId.current) submissionId.current = crypto.randomUUID();
     setStatus('sending');
     try {
-      const base = PRICES[c.product][c.room][c.occ][c.nights - 1];
-      const estimatedTotal = c.dinnerOnly ? c.adults * 220 + c.children * 132 : (c.children || c.infants || c.adults > 2 || (c.adults === 2 && c.occ === 'single') || (c.adults === 1 && c.occ === 'double') ? null : (c.occ === 'double' ? base * 2 : base));
+      const estimatedTotal = placementNeedsCheck ? null : Math.round(calculatedTotal * 100) / 100;
       const payload = {
         booking: { product: c.dinnerOnly ? 'dinner' : c.product, nights: c.dinnerOnly ? null : c.nights, room: c.dinnerOnly ? null : c.room, occupancy: c.dinnerOnly ? null : c.occ, adults: c.adults, children: c.children, infants: c.infants, estimatedTotal },
         name: v.name.trim(), email: v.email.trim(), phone: v.phone.trim(), comment: v.comment.trim(),
@@ -101,7 +107,15 @@ export function LeadForm() {
           <ContactCard id="contact" />
         </div>
         <form ref={formRef} onSubmit={onSubmit} noValidate>
-          <Calculator compact />
+          <div className="booking-summary" aria-live="polite">
+            <h3>{label('Ваш выбор', 'Вашият избор')}</h3>
+            <p><strong>{offerName}</strong></p>
+            {!c.dinnerOnly && <p>{c.nights} {label('ноч.', 'нощ.')}, {c.room === 'classic' ? 'Classic' : c.room === 'comfort' ? 'Comfort' : 'Lux'}, {c.occ === 'double' ? label('двухместный номер', 'двойна стая') : label('одноместное размещение', 'единично настаняване')}</p>}
+            <p>{label('Взрослые', 'Възрастни')}: {c.adults} · {label('Дети 2–11 лет', 'Деца 2–11 г.')}: {c.children} · {label('Дети до 2 лет', 'Деца под 2 г.')}: {c.infants}</p>
+            <strong className="booking-summary__price">{eur(calculatedTotal)}</strong>
+            {placementNeedsCheck && <p className="booking-summary__note">{label('Предварительная сумма. Условия размещения и доплата за дополнительные места подтверждаются отелем.', 'Предварителна сума. Настаняването и доплащането за допълнителни легла се потвърждават от хотела.')}</p>}
+            <a className="booking-summary__edit" href="#offer-calculator">{label('Изменить параметры расчёта', 'Промени параметрите на изчислението')}</a>
+          </div>
           {Object.keys(errors).length > 0 && <p className="err err--sum" role="alert">{f.errSummary}</p>}
           <label className="field">{f.name}
             <input type="text" autoComplete="name" value={v.name} onChange={(e) => set('name', e.target.value)} {...common('name')} /><Err k="name" />
