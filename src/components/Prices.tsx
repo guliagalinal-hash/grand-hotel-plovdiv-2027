@@ -48,18 +48,25 @@ export function Offers() {
   );
 }
 
-function Calculator({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const { t } = useSite();
+export function Calculator({ open = false, onToggle, compact = false }: { open?: boolean; onToggle?: () => void; compact?: boolean }) {
+  const { t, lang } = useSite();
   const c = useCalc();
   const k = t.calc;
+  const bg = lang === 'bg';
+  const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
+  const dinner = c.dinnerOnly;
+  const basePrice = PRICES[c.product][c.room][c.occ][c.nights - 1];
+  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : (c.children || c.infants || c.adults > 2 || (c.adults === 2 && c.occ === 'single') || (c.adults === 1 && c.occ === 'double') ? null : (c.occ === 'double' ? basePrice * 2 : basePrice));
+  const adjust = (value: number, delta: number, setter: (n: number) => void, min: number) => setter(Math.max(min, Math.min(10, value + delta)));
   const product = c.product;
-  const price = PRICES[product][c.room][c.occ][c.nights - 1];
   const incl = product === 'accommodation' ? k.includesA : k.includesB;
   const occLabel = c.occ === 'double' ? k.occDouble : k.occSingle;
   return (
     <div className={'calc calc--' + product} aria-labelledby="calc-h">
       <div className="calc__controls">
         <h3 id="calc-h">{k.title}</h3>
+        <fieldset><legend>{label('Тип заявки', 'Вид запитване')}</legend><div className="seg seg--wide"><button type="button" aria-pressed={!dinner} onClick={() => c.setDinnerOnly(false)}>{label('Проживание / пакет', 'Нощувки / пакет')}</button><button type="button" aria-pressed={dinner} onClick={() => c.setDinnerOnly(true)}>{label('Только гала-ужин', 'Само гала вечеря')}</button></div></fieldset>
+        {!dinner && <>
         <fieldset>
           <legend>{k.product}</legend>
           <div className="seg seg--wide">
@@ -79,24 +86,31 @@ function Calculator({ open, onToggle }: { open: boolean; onToggle: () => void })
           <legend>{k.occ}</legend>
           <div className="seg seg--wide">{OCCS.map((o) => <button key={o} type="button" aria-pressed={c.occ === o} onClick={() => c.setOcc(o)}>{o === 'double' ? k.occDouble : k.occSingle}</button>)}</div>
         </fieldset>
+        </>}
+        <fieldset><legend>{label('Гости', 'Гости')}</legend>{([
+          [label('Взрослые (12+)', 'Възрастни (12+)'), c.adults, c.setAdults, 1],
+          [label('Дети 2–11 лет', 'Деца 2–11 г.'), c.children, c.setChildren, 0],
+          [label('Дети до 2 лет', 'Деца под 2 г.'), c.infants, c.setInfants, 0],
+        ] as const).map(([name, value, setter, min]) => <div key={name} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => adjust(value, -1, setter, min)}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => adjust(value, 1, setter, min)}>+</button></div></div>)}</fieldset>
       </div>
 
       <div className="calc__result">
         <div role="status" aria-live="polite">
-          <span className="calc__ctx">{k.resultLabel}: {c.nights} {k.nightsWord(c.nights)}, {ROOM_LABEL[c.room]}, {occLabel}</span>
-          <strong className="calc__price" data-testid="price">{eur(price)}</strong>
-          <span className="calc__per">{c.occ === 'double' ? k.perPerson : k.perSingle}</span>
-          <p className={'banner ' + (product === 'package' ? 'banner--yes' : 'banner--no')}>{product === 'package' ? k.flagB : k.flagA}</p>
+          <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}`}</span>
+          <strong className="calc__price" data-testid="price">{familyPrice === null ? label('Стоимость уточняется', 'Цената се уточнява') : eur(familyPrice)}</strong>
+          <span className="calc__per">{label('Предварительная стоимость заявки', 'Ориентировъчна стойност на запитването')}</span>
+          {!dinner && <p className={'banner ' + (product === 'package' ? 'banner--yes' : 'banner--no')}>{product === 'package' ? k.flagB : k.flagA}</p>}
+          {familyPrice === null && <p className="note">{label('Размещение детей и дополнительные места уточняются при подтверждении заявки.', 'Настаняването на деца и допълнителните легла се уточняват при потвърждаване на запитването.')}</p>}
         </div>
-        <h4>{k.includes}</h4>
+        {!dinner && <><h4>{k.includes}</h4>
         <ul className="ticks ticks--dark">{incl.map((x) => <li key={x}>{x}</li>)}</ul>
-        {product === 'accommodation' && <p className="note">{k.moreA}</p>}
-        <div className="calc__btns">
+        {product === 'accommodation' && <p className="note">{k.moreA}</p>}</>}
+        {!compact && <div className="calc__btns">
           <button type="button" className="btn btn--lg btn--toggle" aria-expanded={open} aria-controls="all-prices" onClick={onToggle}>
             {k.showAll}<span className="chev" aria-hidden="true" />
           </button>
           <a className="btn btn--outline" href="#apply">{k.request}</a>
-        </div>
+        </div>}
       </div>
     </div>
   );
