@@ -22,14 +22,14 @@ export function SiteProvider({ lang, base, children }: { lang: Lang; base: strin
   const [product, setProduct] = useState<ProductId>('accommodation');
   const [dinnerOnly, setDinnerOnly] = useState(false);
   const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
+  const [childGuests, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [nights, setNights] = useState<Nights>(1);
   const [room, setRoom] = useState<RoomId>('classic');
   const [occ, setOcc] = useState<OccId>('double');
   return (
     <SiteCtx.Provider value={{ lang, t: content[lang], base }}>
-      <CalcCtx.Provider value={{ product, setProduct, dinnerOnly, setDinnerOnly, adults, setAdults, children, setChildren, infants, setInfants, nights, setNights, room, setRoom, occ, setOcc }}>
+      <CalcCtx.Provider value={{ product, setProduct, dinnerOnly, setDinnerOnly, adults, setAdults, children: childGuests, setChildren, infants, setInfants, nights, setNights, room, setRoom, occ, setOcc }}>
         {children}
       </CalcCtx.Provider>
     </SiteCtx.Provider>
