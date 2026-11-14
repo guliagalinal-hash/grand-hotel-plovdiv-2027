@@ -215,4 +215,4 @@ export const ru = {
   },
 };
 
-export type Dict = typeof ru;
+export type Dict = Omit<typeof ru, 'calc'> & { calc: Omit<typeof ru.calc, 'nightsWord'> & { nightsWord: (n: number) => string } };
