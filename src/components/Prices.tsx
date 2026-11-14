@@ -60,7 +60,9 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const adjust = (value: number, delta: number, setter: (n: number) => void, min: number) => setter(Math.max(min, Math.min(10, value + delta)));
   const product = c.product;
   const incl = product === 'accommodation' ? k.includesA : k.includesB;
-  const occLabel = c.occ === 'double' ? k.occDouble : k.occSingle;
+  const occLabel = c.occ === 'double' ? label('Двухместный номер', 'Двойна стая') : label('Одноместное размещение', 'Единично настаняване');
+  const perPerson = !dinner && c.occ === 'double' ? eur(PRICES[product][c.room].double[c.nights - 1]) : null;
+  const guestLabel = label(`${c.adults} взрослых, ${c.children} детей 2–11 лет, ${c.infants} детей до 2 лет`, `${c.adults} възрастни, ${c.children} деца 2–11 г., ${c.infants} деца под 2 г.`);
   return (
     <div className={'calc calc--' + product} aria-labelledby={compact ? "calc-h-lower" : "calc-h-upper"}>
       <div className="calc__controls">
@@ -84,7 +86,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
         </fieldset>
         <fieldset>
           <legend>{k.occ}</legend>
-          <div className="seg seg--wide">{OCCS.map((o) => <button key={o} type="button" aria-pressed={c.occ === o} onClick={() => c.setOcc(o)}>{o === 'double' ? k.occDouble : k.occSingle}</button>)}</div>
+          <div className="seg seg--wide">{OCCS.map((o) => <button key={o} type="button" aria-pressed={c.occ === o} onClick={() => c.setOcc(o)}>{o === 'double' ? label('Двухместный номер', 'Двойна стая') : label('Одноместное размещение', 'Единично настаняване')}</button>)}</div>
         </fieldset>
         </>}
         <fieldset><legend>{label('Гости', 'Гости')}</legend>{([
@@ -96,9 +98,10 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
 
       <div className="calc__result">
         <div role="status" aria-live="polite">
-          <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}`}</span>
+          <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}; ${guestLabel}`}</span>
           <strong className="calc__price" data-testid="price">{familyPrice === null ? label('Стоимость уточняется', 'Цената се уточнява') : eur(familyPrice)}</strong>
-          <span className="calc__per">{label('Предварительная стоимость заявки', 'Ориентировъчна стойност на запитването')}</span>
+          <span className="calc__per">{familyPrice === null ? label('Итог зависит от состава гостей и условий размещения', 'Крайната цена зависи от броя гости и условията за настаняване') : label(`Итого за ${guestLabel}`, `Общо за ${guestLabel}`)}</span>
+          {perPerson && !dinner && <p className="note">{label(`Тариф за 1 человека при двухместном размещении: ${perPerson}. Итог для двух взрослых: ${eur(PRICES[product][c.room].double[c.nights - 1] * 2)}.`, `Цена на човек в двойна стая: ${perPerson}. Общо за двама възрастни: ${eur(PRICES[product][c.room].double[c.nights - 1] * 2)}.`)}</p>}
           {!dinner && <p className={'banner ' + (product === 'package' ? 'banner--yes' : 'banner--no')}>{product === 'package' ? k.flagB : k.flagA}</p>}
           {familyPrice === null && <p className="note">{label('Размещение детей и дополнительные места уточняются при подтверждении заявки.', 'Настаняването на деца и допълнителните легла се уточняват при потвърждаване на запитването.')}</p>}
         </div>
