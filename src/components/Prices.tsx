@@ -9,6 +9,12 @@ export function Offers() {
   const c = useCalc();
   const o = t.offers;
   const [open, setOpen] = useState(false);
+  const goToCalculator = () => {
+    const el = document.getElementById('offer-calculator');
+    if (!el) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: reduceMotion ? 'instant' : 'smooth', block: 'start' });
+  };
   return (
     <section className="sec sec--light" id="prices">
       <div className="wrap">
@@ -28,7 +34,7 @@ export function Offers() {
                 <p className="offer__per">{copy.per}</p>
                 <p className={'banner ' + (p === 'package' ? 'banner--yes' : 'banner--no')}>{copy.flag}</p>
                 <p className="offer__desc">{copy.desc}</p>
-                <button type="button" className="btn btn--outline" aria-pressed={sel} onClick={() => { c.setDinnerOnly(false); c.setProduct(p); }}>{sel ? o.picked : o.pick}</button>
+                <button type="button" className="btn btn--outline" aria-pressed={sel} onClick={() => { c.setDinnerOnly(false); c.setProduct(p); goToCalculator(); }}>{sel ? o.picked : o.pick}</button>
               </article>
             );
           })}
@@ -37,11 +43,13 @@ export function Offers() {
             <p className="offer__price">{o.C.price}</p>
             <p className="offer__per">{o.C.per}</p>
             <p className="offer__desc">{o.C.desc}</p>
-            <button type="button" className="btn btn--outline" aria-pressed={c.dinnerOnly} onClick={() => c.setDinnerOnly(true)}>{c.dinnerOnly ? o.picked : o.pick}</button>
+            <button type="button" className="btn btn--outline" aria-pressed={c.dinnerOnly} onClick={() => { c.setDinnerOnly(true); goToCalculator(); }}>{c.dinnerOnly ? o.picked : o.pick}</button>
           </article>
         </div>
 
-        <Calculator open={open} onToggle={() => setOpen(!open)} />
+        <div id="offer-calculator" style={{ scrollMarginTop: '110px' }}>
+          <Calculator open={open} onToggle={() => setOpen(!open)} />
+        </div>
         <AllPrices open={open} />
       </div>
     </section>
