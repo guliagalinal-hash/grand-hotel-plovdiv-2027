@@ -291,3 +291,7 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
   .plovdiv__fig{display:flex;flex-direction:column}
   .plovdiv__fig .arch-img{flex:1;height:100%;aspect-ratio:auto;min-height:0;object-position:58% center}
 }
+
+/* Calculator: make the next step obvious on narrow screens */
+.calc__view-result{display:none}
+@media(max-width:1000px){.calc__view-result{display:block;width:100%;background:var(--teal);color:var(--milk);text-align:center}.calc__result{scroll-margin-top:calc(var(--hdr) + 18px)}.calc__price{font-size:clamp(38px,10vw,64px);overflow-wrap:anywhere}}
