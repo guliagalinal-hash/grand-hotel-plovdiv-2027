@@ -20,10 +20,10 @@ export function LeadForm() {
   const f = t.form;
   const bg = lang === 'bg';
   const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
-  const adultRate = PRICES[c.product][c.room][c.occ][c.nights - 1];
   const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
-  const calculatedTotal = c.dinnerOnly ? c.adults * 220 + c.children * 132 : adultRate * (c.occ === 'double' ? Math.min(c.adults, 2) : 1) + childStay + (c.product === 'package' ? c.children * 132 : 0);
-  const placementNeedsCheck = !c.dinnerOnly && !((c.occ === 'double' && c.adults === 2) || (c.occ === 'single' && c.adults === 1));
+  const adultTotal = c.adults === 1 ? PRICES[c.product][c.room].single[c.nights - 1] : 2 * PRICES[c.product][c.room].double[c.nights - 1] + Math.max(0, c.adults - 2) * PRICES[c.product][c.room].double[c.nights - 1] * 0.85;
+  const calculatedTotal = c.dinnerOnly ? c.adults * 220 + c.children * 132 : adultTotal + childStay + (c.product === 'package' ? c.children * 132 : 0);
+  const placementNeedsCheck = !c.dinnerOnly && c.adults > 2;
   const offerName = c.dinnerOnly ? label('Только гала-ужин', 'Само гала вечеря') : c.product === 'package' ? label('Проживание с гала-ужином', 'Нощувки с гала вечеря') : label('Проживание без гала-ужина', 'Нощувки без гала вечеря');
   const [v, setV] = useState<Values>({ name: '', email: '', phone: '', comment: '', consent: false, website: '' });
   const [errors, setErrors] = useState<Errors>({});
