@@ -78,8 +78,11 @@ function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: str
     package: { classic: { double: [280.9,323.52,375.28,396], single: [321.7,375.29,452.93,484] }, comfort: { double: [291.05,340.79,401.18,425.33], single: [338.65,401.18,491.77,528] }, lux: { double: [301.2,358.03,427.05,454.67], single: [355.6,427.04,530.57,572] } },
   };
   if (booking.product === 'dinner') booking.estimatedTotal = booking.adults * 220 + booking.children * 132;
-  else if (!booking.children && !booking.infants && ((booking.adults === 1 && booking.occupancy === 'single') || (booking.adults === 2 && booking.occupancy === 'double'))) {
-    booking.estimatedTotal = rates[booking.product][booking.room!][booking.occupancy!][booking.nights! - 1] * (booking.adults === 2 ? 2 : 1);
+  else {
+    const double = rates[booking.product][booking.room!].double[booking.nights! - 1];
+    const adultTotal = booking.adults === 1 ? rates[booking.product][booking.room!].single[booking.nights! - 1] : double * (2 + Math.max(0, booking.adults - 2) * 0.85);
+    const childStay = booking.children * rates.accommodation[booking.room!].double[booking.nights! - 1] * 0.7;
+    booking.estimatedTotal = Math.round((adultTotal + childStay + (booking.product === 'package' ? booking.children * 132 : 0)) * 100) / 100;
   }
   return { ok: true, d: { booking, name, email, phone, comment, pageLang: r.pageLang, submissionId, token } };
 }
