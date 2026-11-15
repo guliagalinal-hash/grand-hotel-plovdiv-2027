@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSite, useCalc } from '../context';
-import { eur, NIGHTS, OCCS, PRICES, ROOMS, type ProductId, type RoomId } from '../data/prices';
+import { eur, NIGHTS, OCCS, PRICES, ROOMS, totalPrice, type ProductId, type RoomId } from '../data/prices';
 
 const ROOM_LABEL: Record<RoomId, string> = { classic: 'Classic', comfort: 'Comfort', lux: 'Lux' };
 
@@ -63,26 +63,20 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const bg = lang === 'bg';
   const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
   const dinner = c.dinnerOnly;
-  const basePrice = PRICES[c.product][c.room][c.occ][c.nights - 1];
-  const standardDouble = c.occ === 'double' && c.adults === 2;
-  const standardSingle = c.occ === 'single' && c.adults === 1;
-  const baseAdults = standardDouble ? basePrice * 2 : standardSingle ? basePrice : c.occ === 'double' ? basePrice * Math.min(c.adults, 2) : basePrice;
-  // Published child accommodation tariff is 70% of the standard double-bed accommodation price.
-  // For the gala package, the child's gala cover (132 EUR) is added separately.
-  const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
-  const childGala = c.product === 'package' ? c.children * 132 : 0;
-  const needsConfirmation = !dinner && c.adults > 2;
-  const adultTotal = c.adults === 1 ? PRICES[c.product][c.room].single[c.nights - 1] : 2 * PRICES[c.product][c.room].double[c.nights - 1] + Math.max(0, c.adults - 2) * PRICES[c.product][c.room].double[c.nights - 1] * 0.85;
-  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : adultTotal + childStay + childGala;
-  const visibleSubtotal = familyPrice;
-
-  const adjust = (value: number, delta: number, setter: (n: number) => void, min: number) => setter(Math.max(min, Math.min(10, value + delta)));
+  const guests = c.rooms.reduce((a, x) => ({ adults: a.adults + x.adults, children: a.children + x.children, infants: a.infants + x.infants }), { adults: 0, children: 0, infants: 0 });
+  const visibleSubtotal = totalPrice(c.product, c.room, c.nights, c.rooms, dinner);
+  const needsConfirmation = !dinner && c.rooms.some(x => x.adults > 2);
+  const childStay = guests.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
+  const childGala = c.product === 'package' ? guests.children * 132 : 0;
+  const changeRoom = (index: number, key: 'adults' | 'children' | 'infants', delta: number) => {
+    c.setRooms(c.rooms.map((g, i) => i === index ? { ...g, [key]: Math.max(key === 'adults' ? 1 : 0, Math.min(10, g[key] + delta)) } : g));
+  };
   const product = c.product;
   const incl = product === 'accommodation' ? k.includesA : k.includesB;
-  const occLabel = c.occ === 'double' ? label('Двухместный номер', 'Двойна стая') : label('Одноместное размещение', 'Единично настаняване');
-  const perPerson = !dinner && c.occ === 'double' ? eur(PRICES[product][c.room].double[c.nights - 1]) : null;
+  
+  
 
-  const guestLabel = label(`${c.adults} взрослых, ${c.children} детей 2–11 лет, ${c.infants} детей до 2 лет`, `${c.adults} възрастни, ${c.children} деца 2–11 г., ${c.infants} деца под 2 г.`);
+  const guestLabel = label(`${guests.adults} взрослых, ${guests.children} детей 2–11 лет, ${guests.infants} детей до 2 лет`, `${guests.adults} възрастни, ${guests.children} деца 2–11 г., ${guests.infants} деца под 2 г.`);
   return (
     <div className={'calc calc--' + product} aria-labelledby={compact ? "calc-h-lower" : "calc-h-upper"}>
       <div className="calc__controls">
@@ -103,27 +97,29 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           <legend>{k.room}</legend>
           <div className="seg">{ROOMS.map((r) => <button key={r} type="button" aria-pressed={c.room === r} onClick={() => c.setRoom(r)}>{ROOM_LABEL[r]}</button>)}</div>
         </fieldset>
-        <fieldset>
-          <legend>{k.occ}</legend>
-          <div className="seg seg--wide">{OCCS.map((o) => <button key={o} type="button" aria-pressed={c.occ === o} onClick={() => c.setOcc(o)}>{o === 'double' ? label('Двухместный номер', 'Двойна стая') : label('Одноместное размещение', 'Единично настаняване')}</button>)}</div>
-        </fieldset>
         </>}
-        <fieldset><legend>{label('Гости', 'Гости')}</legend>{([
-          [label('Взрослые (12+)', 'Възрастни (12+)'), c.adults, c.setAdults, 1],
-          [label('Дети 2–11 лет', 'Деца 2–11 г.'), c.children, c.setChildren, 0],
-          [label('Дети до 2 лет', 'Деца под 2 г.'), c.infants, c.setInfants, 0],
-        ] as const).map(([name, value, setter, min]) => <div key={name} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => { adjust(value, -1, setter, min); if (setter === c.setAdults) c.setOcc(value - 1 === 1 ? 'single' : 'double'); }}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => { adjust(value, 1, setter, min); if (setter === c.setAdults) c.setOcc('double'); }}>+</button></div></div>)}</fieldset>
+        <fieldset><legend>{label('Гости', 'Гости')}</legend>
+          {!dinner && <div className="row2"><span>{label('Номеров', 'Стаи')}</span><div className="seg"><button type="button" disabled={c.rooms.length <= 1} onClick={() => c.setRooms(c.rooms.slice(0, -1))}>−</button><output>{c.rooms.length}</output><button type="button" disabled={c.rooms.length >= 5} onClick={() => c.setRooms([...c.rooms, { adults: 1, children: 0, infants: 0 }])}>+</button></div></div>}
+          {c.rooms.map((g, i) => <div key={i}>
+            {!dinner && c.rooms.length > 1 && <strong>{label('Номер', 'Стая')} {i + 1}</strong>}
+            {([
+              [label('Взрослые (12+)', 'Възрастни (12+)'), 'adults', g.adults, 1],
+              [label('Дети 2–11 лет', 'Деца 2–11 г.'), 'children', g.children, 0],
+              [label('Дети до 2 лет', 'Деца под 2 г.'), 'infants', g.infants, 0],
+            ] as const).map(([name, key, value, min]) => <div key={key} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => changeRoom(i, key, -1)}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => changeRoom(i, key, 1)}>+</button></div></div>)}
+          </div>)}
+        </fieldset>
         <button type="button" className="btn calc__view-result" onClick={() => document.getElementById("calculator-result")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" })}>{label("Посмотреть стоимость ↓", "Виж цената ↓")}</button>
       </div>
 
       <div className="calc__result" id={compact ? undefined : "calculator-result"}>
         <div role="status" aria-live="polite">
-          <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${occLabel}; ${guestLabel}`}</span>
+          <span className="calc__ctx">{dinner ? label('Гала-ужин 31 декабря', 'Гала вечеря на 31 декември') : `${k.resultLabel}: ${c.nights} ${k.nightsWord(c.nights)}, ${ROOM_LABEL[c.room]}, ${c.rooms.length} ${label('ном.', 'стаи')}; ${guestLabel}`}</span>
           <strong className="calc__price" data-testid="price">{eur(visibleSubtotal)}</strong>
           <span className="calc__per">{needsConfirmation ? label("Предварительная сумма, размещение требует подтверждения", "Предварителна сума, настаняването подлежи на потвърждение") : label(`Итого за ${guestLabel}`, `Общо за ${guestLabel}`)}</span>
-          {!dinner && <p className="note">{c.occ === 'double' ? label(`Тариф за взрослого на одном месте в двухместном номере: ${perPerson}.`, `Цена за възрастен на легло в двойна стая: ${perPerson}.`) : label('Тариф за одноместное размещение.', 'Цена за единично настаняване.')}</p>}
-          {!dinner && c.children > 0 && <p className="note">{label(`Дети 2–11 лет: проживание 70% от тарифа места в двухместном номере (${eur(childStay)})${product === "package" ? ` + гала-ужин ${eur(childGala)}` : ""}.`, `Деца 2–11 г.: нощувка 70% от цената на легло в двойна стая (${eur(childStay)})${product === "package" ? ` + гала вечеря ${eur(childGala)}` : ""}.`)}</p>}
-          {!dinner && c.infants > 0 && <p className="note">{label('Дети до 2 лет бесплатно. Возможность размещения подтверждается отелем.', 'Деца под 2 години безплатно. Настаняването се потвърждава от хотела.')}</p>}
+          {!dinner && <p className="note">{label('Тариф рассчитывается по составу гостей в каждом номере.', 'Цената се изчислява според гостите във всяка стая.')}</p>}
+          {!dinner && guests.children > 0 && <p className="note">{label(`Дети 2–11 лет: проживание 70% от тарифа места в двухместном номере (${eur(childStay)})${product === "package" ? ` + гала-ужин ${eur(childGala)}` : ""}.`, `Деца 2–11 г.: нощувка 70% от цената на легло в двойна стая (${eur(childStay)})${product === "package" ? ` + гала вечеря ${eur(childGala)}` : ""}.`)}</p>}
+          {!dinner && guests.infants > 0 && <p className="note">{label('Дети до 2 лет бесплатно. Возможность размещения подтверждается отелем.', 'Деца под 2 години безплатно. Настаняването се потвърждава от хотела.')}</p>}
           {needsConfirmation && <p className="note">{label('Стоимость дополнительных взрослых и условия размещения подтвердит отель. Вы можете отправить заявку сейчас.', 'Цената за допълнителни възрастни и условията за настаняване ще бъдат потвърдени от хотела. Можете да изпратите запитване сега.')}</p>}
           {!dinner && <p className={'banner ' + (product === 'package' ? 'banner--yes' : 'banner--no')}>{product === 'package' ? k.flagB : k.flagA}</p>}
         </div>
