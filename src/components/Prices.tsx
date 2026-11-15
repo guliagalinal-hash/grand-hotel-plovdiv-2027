@@ -71,8 +71,9 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   // For the gala package, the child's gala cover (132 EUR) is added separately.
   const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
   const childGala = c.product === 'package' ? c.children * 132 : 0;
-  const needsConfirmation = !dinner && !(standardDouble || standardSingle);
-  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : baseAdults + childStay + childGala;
+  const needsConfirmation = !dinner && c.adults > 2;
+  const adultTotal = c.adults === 1 ? PRICES[product][c.room].single[c.nights - 1] : 2 * PRICES[product][c.room].double[c.nights - 1] + Math.max(0, c.adults - 2) * PRICES[product][c.room].double[c.nights - 1] * 0.85;
+  const familyPrice = dinner ? c.adults * 220 + c.children * 132 : adultTotal + childStay + childGala;
   const visibleSubtotal = familyPrice;
 
   const adjust = (value: number, delta: number, setter: (n: number) => void, min: number) => setter(Math.max(min, Math.min(10, value + delta)));
@@ -111,7 +112,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           [label('Взрослые (12+)', 'Възрастни (12+)'), c.adults, c.setAdults, 1],
           [label('Дети 2–11 лет', 'Деца 2–11 г.'), c.children, c.setChildren, 0],
           [label('Дети до 2 лет', 'Деца под 2 г.'), c.infants, c.setInfants, 0],
-        ] as const).map(([name, value, setter, min]) => <div key={name} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => adjust(value, -1, setter, min)}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => adjust(value, 1, setter, min)}>+</button></div></div>)}</fieldset>
+        ] as const).map(([name, value, setter, min]) => <div key={name} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => { adjust(value, -1, setter, min); if (setter === c.setAdults) c.setOcc(value - 1 === 1 ? 'single' : 'double'); }}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => { adjust(value, 1, setter, min); if (setter === c.setAdults) c.setOcc('double'); }}>+</button></div></div>)}</fieldset>
         <button type="button" className="btn calc__view-result" onClick={() => document.getElementById("calculator-result")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" })}>{label("Посмотреть стоимость ↓", "Виж цената ↓")}</button>
       </div>
 
@@ -133,7 +134,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           <button type="button" className="btn btn--lg btn--toggle" aria-expanded={open} aria-controls="all-prices" onClick={onToggle}>
             {k.showAll}<span className="chev" aria-hidden="true" />
           </button>
-          <a className="btn btn--outline" href="#apply">{label("Продолжить к заявке", "Продължи към запитване")}</a>
+          <a className="btn btn--outline" href="#apply">{label("Отправить заявку", "Изпрати запитване")}</a>
         </div>}
       </div>
     </div>
