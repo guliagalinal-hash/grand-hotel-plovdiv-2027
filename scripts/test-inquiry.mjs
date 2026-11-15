@@ -18,7 +18,7 @@ globalThis.fetch = async (url, init) => {
 const logs = []; for (const k of ['log', 'error', 'warn', 'info']) console[k] = (...a) => logs.push(a.join(' '));
 
 let ipN = 0;
-const body = (o = {}) => ({ booking: { product: 'accommodation', nights: 1, room: 'classic', occupancy: 'double', adults: 2, children: 0, infants: 0, estimatedTotal: 1 }, name: 'Ivan Petrov', email: 'ivan@example.com', phone: '+359 88 123 4567', comment: 'Hello', consent: true, pageLang: 'ru',
+const body = (o = {}) => ({ booking: { product: 'accommodation', nights: 1, room: 'classic', occupancy: 'double', rooms: [{ adults: 2, children: 0, infants: 0 }], adults: 2, children: 0, infants: 0, estimatedTotal: 1 }, name: 'Ivan Petrov', email: 'ivan@example.com', phone: '+359 88 123 4567', comment: 'Hello', consent: true, pageLang: 'ru',
   submissionId: 'sub-' + Math.random().toString(36).slice(2) + '-xx', turnstileToken: 'tok', website: '', ...o });
 const post = (b, { env = ENV, ip = '10.0.0.' + ++ipN, origin = 'https://site.test', headers = {} } = {}) =>
   fn.onRequestPost({ env: { ...env }, request: new Request('https://site.test/api/inquiry', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, 'CF-Connecting-IP': ip, ...headers }, body: typeof b === 'string' ? b : JSON.stringify(b) }) });
@@ -65,3 +65,15 @@ reset(); brevoStatus = 500; { const id = 'fail-0001-bbbb'; const r = await post(
 
 assert.ok(!logs.some((l) => /ivan|petrov|example\.com|\+359|Hello|<b>/i.test(l)), 'logs: ' + logs.join(' | ')); ok('logs contain no personal data (' + logs.length + ' log lines)');
 process.stdout.write(`\n${passed} test groups passed\n`);
+
+reset(); {
+  const b = body();
+  b.booking = { product: 'package', nights: 1, room: 'lux', occupancy: 'double', rooms: [{ adults: 1, children: 0, infants: 0 }, { adults: 1, children: 0, infants: 0 }], adults: 2, children: 0, infants: 0, estimatedTotal: 1 };
+  assert.equal((await post(b)).status, 200);
+  assert.ok(JSON.parse(brevoCalls()[0].init.body).textContent.includes('711.20 EUR'));
+} ok('two separate single rooms priced independently');
+reset(); {
+  const b = body();
+  b.booking.rooms = [{ adults: 1, children: 0, infants: 0 }];
+  assert.equal((await post(b)).status, 400);
+} ok('room assignments must match total guest count');
