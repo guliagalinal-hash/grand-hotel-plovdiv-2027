@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSite, useCalc } from '../context';
-import { eur } from '../data/prices';
+import { eur, totalPrice } from '../data/prices';
 import { PRICES } from '../data/prices';
 import { config } from '../config';
 import { ContactCard } from './Sections';
@@ -20,10 +20,9 @@ export function LeadForm() {
   const f = t.form;
   const bg = lang === 'bg';
   const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
-  const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
-  const adultTotal = c.adults === 1 ? PRICES[c.product][c.room].single[c.nights - 1] : 2 * PRICES[c.product][c.room].double[c.nights - 1] + Math.max(0, c.adults - 2) * PRICES[c.product][c.room].double[c.nights - 1] * 0.85;
-  const calculatedTotal = c.dinnerOnly ? c.adults * 220 + c.children * 132 : adultTotal + childStay + (c.product === 'package' ? c.children * 132 : 0);
-  const placementNeedsCheck = !c.dinnerOnly && c.adults > 2;
+  const guests = c.rooms.reduce((a, g) => ({ adults: a.adults + g.adults, children: a.children + g.children, infants: a.infants + g.infants }), { adults: 0, children: 0, infants: 0 });
+  const calculatedTotal = totalPrice(c.product, c.room, c.nights, c.rooms, c.dinnerOnly);
+  const placementNeedsCheck = !c.dinnerOnly && c.rooms.some(g => g.adults > 2);
   const offerName = c.dinnerOnly ? label('Только гала-ужин', 'Само гала вечеря') : c.product === 'package' ? label('Проживание с гала-ужином', 'Нощувки с гала вечеря') : label('Проживание без гала-ужина', 'Нощувки без гала вечеря');
   const [v, setV] = useState<Values>({ name: '', email: '', phone: '', comment: '', consent: false, website: '' });
   const [errors, setErrors] = useState<Errors>({});
@@ -82,7 +81,7 @@ export function LeadForm() {
     try {
       const estimatedTotal = placementNeedsCheck ? null : Math.round(calculatedTotal * 100) / 100;
       const payload = {
-        booking: { product: c.dinnerOnly ? 'dinner' : c.product, nights: c.dinnerOnly ? null : c.nights, room: c.dinnerOnly ? null : c.room, occupancy: c.dinnerOnly ? null : c.occ, adults: c.adults, children: c.children, infants: c.infants, estimatedTotal },
+        booking: { product: c.dinnerOnly ? 'dinner' : c.product, nights: c.dinnerOnly ? null : c.nights, room: c.dinnerOnly ? null : c.room, occupancy: c.dinnerOnly ? null : (c.rooms.length === 1 && c.rooms[0].adults === 1 ? 'single' : 'double'), rooms: c.dinnerOnly ? [] : c.rooms, adults: guests.adults, children: guests.children, infants: guests.infants, estimatedTotal },
         name: v.name.trim(), email: v.email.trim(), phone: v.phone.trim(), comment: v.comment.trim(),
         consent: true, pageLang: lang, submissionId: submissionId.current, turnstileToken: token, website: v.website,
       };
@@ -110,8 +109,9 @@ export function LeadForm() {
           <div className="booking-summary" aria-live="polite">
             <h3>{label('Ваш выбор', 'Вашият избор')}</h3>
             <p><strong>{offerName}</strong></p>
-            {!c.dinnerOnly && <p>{c.nights} {label('ноч.', 'нощ.')}, {c.room === 'classic' ? 'Classic' : c.room === 'comfort' ? 'Comfort' : 'Lux'}, {c.occ === 'double' ? label('двухместный номер', 'двойна стая') : label('одноместное размещение', 'единично настаняване')}</p>}
-            <p>{label('Взрослые', 'Възрастни')}: {c.adults} · {label('Дети 2–11 лет', 'Деца 2–11 г.')}: {c.children} · {label('Дети до 2 лет', 'Деца под 2 г.')}: {c.infants}</p>
+            {!c.dinnerOnly && <p>{c.nights} {label('ноч.', 'нощ.')}, {c.room === 'classic' ? 'Classic' : c.room === 'comfort' ? 'Comfort' : 'Lux'}, {c.rooms.length} {label('ном.', 'стаи')}</p>}
+            <p>{label('Взрослые', 'Възрастни')}: {guests.adults} · {label('Дети 2–11 лет', 'Деца 2–11 г.')}: {guests.children} · {label('Дети до 2 лет', 'Деца под 2 г.')}: {guests.infants}</p>
+            {!c.dinnerOnly && c.rooms.length > 1 && <p>{c.rooms.map((g, i) => `${label('Номер', 'Стая')} ${i + 1}: ${g.adults} + ${g.children} + ${g.infants}`).join(' · ')}</p>}
             <strong className="booking-summary__price">{eur(calculatedTotal)}</strong>
             {placementNeedsCheck && <p className="booking-summary__note">{label('Предварительная сумма. Условия размещения и доплата за дополнительные места подтверждаются отелем.', 'Предварителна сума. Настаняването и доплащането за допълнителни легла се потвърждават от хотела.')}</p>}
             <a className="booking-summary__edit" href="#offer-calculator">{label('Изменить параметры расчёта', 'Промени параметрите на изчислението')}</a>
