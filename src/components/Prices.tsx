@@ -72,7 +72,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const childStay = c.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
   const childGala = c.product === 'package' ? c.children * 132 : 0;
   const needsConfirmation = !dinner && c.adults > 2;
-  const adultTotal = c.adults === 1 ? PRICES[c.product][c.room].single[c.nights - 1] : 2 * PRICES[c.product][c.room].double[c.nights - 1] + Math.max(0, c.adults - 2) * PRICES[product][c.room].double[c.nights - 1] * 0.85;
+  const adultTotal = c.adults === 1 ? PRICES[c.product][c.room].single[c.nights - 1] : 2 * PRICES[c.product][c.room].double[c.nights - 1] + Math.max(0, c.adults - 2) * PRICES[c.product][c.room].double[c.nights - 1] * 0.85;
   const familyPrice = dinner ? c.adults * 220 + c.children * 132 : adultTotal + childStay + childGala;
   const visibleSubtotal = familyPrice;
 
