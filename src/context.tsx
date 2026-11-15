@@ -21,12 +21,12 @@ const CalcCtx = createContext<Calc | null>(null);
 export function SiteProvider({ lang, base, children }: { lang: Lang; base: string; children: ReactNode }) {
   const [product, setProduct] = useState<ProductId>('accommodation');
   const [dinnerOnly, setDinnerOnly] = useState(false);
-  const [adults, setAdults] = useState(2);
+  const [adults, setAdults] = useState(1);
   const [childGuests, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [nights, setNights] = useState<Nights>(1);
   const [room, setRoom] = useState<RoomId>('classic');
-  const [occ, setOcc] = useState<OccId>('double');
+  const [occ, setOcc] = useState<OccId>('single');
   return (
     <SiteCtx.Provider value={{ lang, t: content[lang], base }}>
       <CalcCtx.Provider value={{ product, setProduct, dinnerOnly, setDinnerOnly, adults, setAdults, children: childGuests, setChildren, infants, setInfants, nights, setNights, room, setRoom, occ, setOcc }}>
