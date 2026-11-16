@@ -14,7 +14,7 @@ interface KV {
 }
 export interface Env {
   BREVO_API_KEY?: string; BREVO_SENDER_EMAIL?: string; FORM_RECIPIENT_EMAIL?: string; TURNSTILE_SECRET_KEY?: string;
-  INQUIRY_KV?: KV; ALLOWED_ORIGINS?: string;
+  INQUIRY_KV?: KV; ALLOWED_ORIGINS?: string; GOOGLE_SCRIPT_URL?: string; GOOGLE_SCRIPT_TOKEN?: string;
 }
 interface Ctx { request: Request; env: Env }
 
@@ -152,6 +152,24 @@ async function sendBrevo(env: Env, d: Inquiry): Promise<boolean> {
   } catch { console.error('inquiry_error', 'brevo_unreachable'); return false; }
 }
 
+async function sendGoogle(env: Env, d: Inquiry): Promise<boolean> {
+  try {
+    const url = new URL(env.GOOGLE_SCRIPT_URL!);
+    if (url.protocol !== 'https:' || url.hostname !== 'script.google.com' || !url.pathname.startsWith('/macros/s/')) return false;
+    const res = await fetch(url.toString(), {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ token: env.GOOGLE_SCRIPT_TOKEN, inquiry: {
+        submissionId: d.submissionId, pageLang: d.pageLang, name: d.name, email: d.email,
+        phone: d.phone, comment: d.comment, booking: d.booking,
+      } }),
+      redirect: 'follow',
+    });
+    if (!res.ok) { console.error('inquiry_error', 'google_status', res.status); return false; }
+    const result = await res.json() as {ok?: boolean};
+    return result.ok === true;
+  } catch { console.error('inquiry_error', 'google_unreachable'); return false; }
+}
+
 export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> => {
   // 1) same-origin only
   const origin = request.headers.get('Origin');
@@ -159,7 +177,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (origin ? !allowed.has(origin) : request.headers.get('Sec-Fetch-Site') !== 'same-origin') return json(403, { ok: false, error: 'forbidden' });
 
   // 2) configuration (never pretend success when something is missing)
-  if (!env.BREVO_API_KEY || !env.BREVO_SENDER_EMAIL || !env.FORM_RECIPIENT_EMAIL || !env.TURNSTILE_SECRET_KEY) {
+  if (!env.GOOGLE_SCRIPT_URL || !env.GOOGLE_SCRIPT_TOKEN || !env.TURNSTILE_SECRET_KEY) {
     console.error('inquiry_error', 'not_configured');
     return json(503, { ok: false, error: 'not_configured' });
   }
@@ -193,7 +211,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (!(await verifyTurnstile(env, d.token, ip))) { await store.del(env, subKey); return json(403, { ok: false, error: 'turnstile_failed' }); }
 
   // 7) send
-  if (!(await sendBrevo(env, d))) { await store.del(env, subKey); return json(502, { ok: false, error: 'send_failed' }); }
+  if (!(await sendGoogle(env, d))) { await store.del(env, subKey); return json(502, { ok: false, error: 'send_failed' }); }
   await store.put(env, subKey, 'done', 86400);
   return json(200, { ok: true });
 };
