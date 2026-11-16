@@ -35,7 +35,7 @@ export function LeadForm() {
   const siteKey = config.turnstileSiteKey;
   const set = <K extends keyof Values>(k: K, val: Values[K]) => setV((p) => ({ ...p, [k]: val }));
 
-  // Cloudflare Turnstile (only when a public site key is configured)
+  // Cloudflare Turnstile (optional; not required for inquiry submission)
   useEffect(() => {
     if (!siteKey || !tsBox.current) return;
     const render = () => {
@@ -60,7 +60,7 @@ export function LeadForm() {
     if (!v.email.trim()) e.email = f.errRequired; else if (!EMAIL.test(v.email.trim())) e.email = f.errEmail;
     if (!v.phone.trim()) e.phone = f.errRequired; else if (!isPhone(v.phone.trim())) e.phone = f.errPhone;
     if (!v.consent) e.consent = f.errConsent;
-    if (siteKey && !token) e.turnstile = f.errTurnstile;
+
     return e;
   }
 
@@ -75,7 +75,7 @@ export function LeadForm() {
       return;
     }
     // Never pretend: without a Turnstile key the server cannot accept the form, so nothing is sent and the visitor is told so.
-    if (!siteKey) { setStatus('fail'); return; }
+
     if (!submissionId.current) submissionId.current = crypto.randomUUID();
     setStatus('sending');
     try {
