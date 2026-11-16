@@ -66,7 +66,7 @@ function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: str
   if (r.consent !== true) return { ok: false, field: 'consent' };
   if (r.pageLang !== 'ru' && r.pageLang !== 'bg') return { ok: false, field: 'pageLang' };
   const submissionId = clean(r.submissionId, 64); if (!/^[A-Za-z0-9-]{8,64}$/.test(submissionId)) return { ok: false, field: 'submissionId' };
-  const token = clean(r.turnstileToken, 2048); if (!token) return { ok: false, field: 'turnstileToken' };
+  const token = '';
   const b = r.booking as Record<string, unknown> | undefined;
   if (!b || !['accommodation', 'package', 'dinner'].includes(String(b.product))) return { ok: false, field: 'booking.product' };
   if (![b.adults, b.children, b.infants].every(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 10) || (b.adults as number) < 1) return { ok: false, field: 'booking.guests' };
@@ -177,7 +177,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (origin ? !allowed.has(origin) : request.headers.get('Sec-Fetch-Site') !== 'same-origin') return json(403, { ok: false, error: 'forbidden' });
 
   // 2) configuration (never pretend success when something is missing)
-  if (!env.GOOGLE_SCRIPT_URL || !env.GOOGLE_SCRIPT_TOKEN || !env.TURNSTILE_SECRET_KEY) {
+  if (!env.GOOGLE_SCRIPT_URL || !env.GOOGLE_SCRIPT_TOKEN) {
     console.error('inquiry_error', 'not_configured');
     return json(503, { ok: false, error: 'not_configured' });
   }
@@ -194,7 +194,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
 
   // 4) rate limit per IP (hashed with a secret salt; the raw IP is not stored)
   const ip = request.headers.get('CF-Connecting-IP') ?? '';
-  const ipKey = await sha256Hex(`${ip}|${env.TURNSTILE_SECRET_KEY}`);
+  const ipKey = await sha256Hex(`${ip}|${env.GOOGLE_SCRIPT_TOKEN}`);
   const rlKey = `rl:${ipKey.slice(0, 32)}:${Math.floor(Date.now() / (RATE_WINDOW_S * 1000))}`;
   const used = Number((await store.get(env, rlKey)) ?? 0);
   if (used >= RATE_LIMIT) return json(429, { ok: false, error: 'rate_limited' }, { 'Retry-After': String(RATE_WINDOW_S) });
@@ -207,8 +207,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (prev === 'pending') return json(409, { ok: false, error: 'in_progress' });
   await store.put(env, subKey, 'pending', 600);
 
-  // 6) Turnstile
-  if (!(await verifyTurnstile(env, d.token, ip))) { await store.del(env, subKey); return json(403, { ok: false, error: 'turnstile_failed' }); }
+  // 6) No CAPTCHA: honeypot, same-origin checks, validation and rate limit remain.
 
   // 7) send
   if (!(await sendGoogle(env, d))) { await store.del(env, subKey); return json(502, { ok: false, error: 'send_failed' }); }
