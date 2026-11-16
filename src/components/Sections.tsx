@@ -145,7 +145,7 @@ export function ContactCard({ id }: { id?: string }) {
       <h3>{c.title}</h3>
       <ul className="contact__list">
         <li><span>{c.phone}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
-        <li><span>{c.viber}</span><b>{k.phoneDisplay}</b></li>
+        <li><span>{c.viber}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
         <li><span>{c.email}</span><a href={`mailto:${k.email}`}>{k.email}</a></li>
       </ul>
       <div className="contact__btns">
@@ -173,7 +173,7 @@ export function Footer() {
           <div className="foot__seller">
             <p className="foot__sub">{c.title}</p>
             <p><span>{c.phone}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
-            <p><span>{c.viber}:</span> {k.phoneDisplay}</p>
+            <p><span>{c.viber}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
             <p><span>{c.email}:</span> <a href={`mailto:${k.email}`}>{k.email}</a></p>
           </div>
           {(filled.length > 0 || s.privacyUrl) && (
