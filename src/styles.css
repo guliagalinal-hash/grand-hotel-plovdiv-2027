@@ -304,3 +304,11 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 .booking-summary .booking-summary__note{font-size:14px}
 .booking-summary__edit{display:inline-block;color:#18313d;text-decoration:underline;font-weight:700;margin-top:12px}
 #apply{scroll-margin-top:100px}
+
+/* Mobile gala dinner tariff: consistent label and price columns. */
+@media (max-width:640px){
+  .cover div{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,auto);gap:12px;align-items:center;padding:16px 0}
+  .cover dt{min-width:0;line-height:1.35}
+  .cover dd{margin:0;min-width:0;text-align:right;font-size:clamp(22px,6vw,30px);line-height:1.2;overflow-wrap:normal}
+  .cover dd small{display:block;font-size:12px;line-height:1.4;margin-top:3px}
+}
