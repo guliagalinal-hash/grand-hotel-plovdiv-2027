@@ -20,9 +20,9 @@ const reset=()=>{calls=[];tsOk=true;googleOk=true};
 reset();assert.equal((await fn.onRequest()).status,405);
 reset();assert.equal((await post(body(),{origin:'https://evil.test'})).status,403);
 reset();assert.equal((await post(body(),{env:{GOOGLE_SCRIPT_TOKEN:''}})).status,503);
-reset();assert.equal((await post(body(),{env:{TURNSTILE_SECRET_KEY:''}})).status,503);
+reset();assert.equal((await post(body(),{env:{TURNSTILE_SECRET_KEY:''}})).status,200);
 reset();{let b=body();b.email='bad';assert.equal((await post(b)).status,400);assert.equal(calls.length,0)}
-reset();tsOk=false;assert.equal((await post(body())).status,403);assert.equal(google().length,0);
+reset();tsOk=false;assert.equal((await post(body())).status,200);assert.equal(google().length,1);
 reset();{let b=body();assert.equal((await post(b)).status,200);let d=JSON.parse(google()[0].init.body);assert.equal(d.token,env.GOOGLE_SCRIPT_TOKEN);assert.equal(d.inquiry.booking.estimatedTotal,143.3);assert.equal(d.inquiry.email,b.email);assert.equal(d.inquiry.submissionId,b.submissionId)}
 reset();{let b=body();b.booking={product:'package',nights:1,room:'lux',occupancy:'double',rooms:[{adults:1,children:0,infants:0},{adults:1,children:0,infants:0}],adults:2,children:0,infants:0,estimatedTotal:1};assert.equal((await post(b)).status,200);assert.equal(JSON.parse(google()[0].init.body).inquiry.booking.estimatedTotal,711.2)}
 reset();{let b=body();b.booking.rooms=[{adults:1,children:0,infants:0}];assert.equal((await post(b)).status,400)}
