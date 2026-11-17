@@ -162,8 +162,7 @@ function PriceTable({ product, caption }: { product: ProductId; caption: string 
               <tr key={n}>
                 <th scope="row">{k.nightsShort(n)}</th>
                 {ROOMS.flatMap((r) => OCCS.map((o) => {
-                  const sel = c.product === product && c.nights === n && c.room === r && c.occ === o;
-                  return <td key={r + o} className={sel ? 'sel' : ''}>{eur(PRICES[product][r][o][n - 1])}</td>;
+                  return <td key={r + o}>{eur(PRICES[product][r][o][n - 1])}</td>;
                 }))}
               </tr>
             ))}
