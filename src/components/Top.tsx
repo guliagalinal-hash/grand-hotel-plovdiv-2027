@@ -4,11 +4,12 @@ import { HERO, LOBBY, type Img } from '../data/images';
 import { Pic } from './Pic';
 
 export function Header() {
-  const { t } = useSite();
+  const { t, lang } = useSite();
   const [open, setOpen] = useState(false);
   const links: [string, string][] = [
     ['#program', t.nav.program], ['#prices', t.nav.prices], ['#rooms', t.nav.rooms],
     ['#spa', t.nav.spa], ['#dining', t.nav.dining], ['#plovdiv', t.nav.plovdiv], ['#terms', t.nav.terms],
+    ['#contact', lang === 'bg' ? 'Контакти' : 'Контакты'],
   ];
   return (
     <header className="hdr">
