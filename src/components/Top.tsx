@@ -18,7 +18,7 @@ export function Header() {
           {links.map(([h, l]) => <a key={h} href={h} onClick={() => setOpen(false)}>{l}</a>)}
         </nav>
         <div className="hdr__right">
-          <a className="btn btn--sm hdr__cta" href="#apply">{t.cta}</a>
+          <a className="btn btn--sm hdr__cta" href="#offer-calculator">{t.cta}</a>
           <button type="button" className="burger" aria-expanded={open} aria-controls="nav" aria-label={t.nav.menu} onClick={() => setOpen(!open)}>
             <span /><span /><span />
           </button>
