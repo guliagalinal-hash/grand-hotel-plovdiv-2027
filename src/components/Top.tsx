@@ -4,11 +4,12 @@ import { HERO, LOBBY, type Img } from '../data/images';
 import { Pic } from './Pic';
 
 export function Header() {
-  const { t } = useSite();
+  const { t, lang } = useSite();
   const [open, setOpen] = useState(false);
   const links: [string, string][] = [
     ['#program', t.nav.program], ['#prices', t.nav.prices], ['#rooms', t.nav.rooms],
     ['#spa', t.nav.spa], ['#dining', t.nav.dining], ['#plovdiv', t.nav.plovdiv], ['#terms', t.nav.terms],
+    ['#contact', lang === 'bg' ? 'Контакти' : 'Контакты'],
   ];
   return (
     <header className="hdr">
@@ -18,7 +19,7 @@ export function Header() {
           {links.map(([h, l]) => <a key={h} href={h} onClick={() => setOpen(false)}>{l}</a>)}
         </nav>
         <div className="hdr__right">
-          <a className="btn btn--sm hdr__cta" href="#apply">{t.cta}</a>
+          <a className="btn btn--sm hdr__cta" href="#offer-calculator">{t.cta}</a>
           <button type="button" className="burger" aria-expanded={open} aria-controls="nav" aria-label={t.nav.menu} onClick={() => setOpen(!open)}>
             <span /><span /><span />
           </button>

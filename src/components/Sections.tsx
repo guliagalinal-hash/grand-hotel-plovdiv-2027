@@ -106,7 +106,7 @@ export function DinnerSection() {
             <div><dt>{d.infant}</dt><dd>{d.free}</dd></div>
             <div><dt>{d.teen}</dt><dd>{d.teenVal}</dd></div>
           </dl>
-          <a className="btn btn--lg" href="#apply">{d.cta}</a>
+          <a className="btn btn--lg" href="#offer-calculator">{d.cta}</a>
         </div>
         <aside className="diff">
           <h3>{d.diffTitle}</h3>
@@ -144,12 +144,12 @@ export function ContactCard({ id }: { id?: string }) {
     <div className="contact" id={id}>
       <h3>{c.title}</h3>
       <ul className="contact__list">
-        <li><span>{c.phone}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
-        <li><span>{c.viber}</span><b>{k.phoneDisplay}</b></li>
+        <li><span>{c.phone}</span><span className="phone-value"><span className="phone-value__desktop">{k.phoneDisplay}</span><a className="phone-value__mobile" href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></span></li>
+        <li><span>{c.viber}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
         <li><span>{c.email}</span><a href={`mailto:${k.email}`}>{k.email}</a></li>
       </ul>
       <div className="contact__btns">
-        <a className="btn" href={`tel:${k.phoneRaw}`}>{c.call}</a>
+        <a className="btn contact__call" href={`tel:${k.phoneRaw}`}>{c.call}</a>
         <a className="btn btn--outline" href={`mailto:${k.email}`}>{c.mailBtn}</a>
       </div>
     </div>
@@ -173,7 +173,7 @@ export function Footer() {
           <div className="foot__seller">
             <p className="foot__sub">{c.title}</p>
             <p><span>{c.phone}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
-            <p><span>{c.viber}:</span> {k.phoneDisplay}</p>
+            <p><span>{c.viber}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
             <p><span>{c.email}:</span> <a href={`mailto:${k.email}`}>{k.email}</a></p>
           </div>
           {(filled.length > 0 || s.privacyUrl) && (

@@ -14,7 +14,7 @@ interface KV {
 }
 export interface Env {
   BREVO_API_KEY?: string; BREVO_SENDER_EMAIL?: string; FORM_RECIPIENT_EMAIL?: string; TURNSTILE_SECRET_KEY?: string;
-  INQUIRY_KV?: KV; ALLOWED_ORIGINS?: string;
+  INQUIRY_KV?: KV; ALLOWED_ORIGINS?: string; GOOGLE_SCRIPT_URL?: string; GOOGLE_SCRIPT_TOKEN?: string;
 }
 interface Ctx { request: Request; env: Env }
 
@@ -51,7 +51,8 @@ const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 const clean = (s: unknown, max: number) => (typeof s === 'string' ? s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, max) : '');
 const oneLine = (s: string) => s.replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
-interface Inquiry { name: string; email: string; phone: string; comment: string; pageLang: 'ru' | 'bg'; submissionId: string; token: string }
+interface Booking { product: 'accommodation' | 'package' | 'dinner'; nights: number | null; room: string | null; occupancy: string | null; adults: number; children: number; infants: number; estimatedTotal: number | null; rooms?: { adults: number; children: number; infants: number }[] }
+interface Inquiry { booking: Booking; name: string; email: string; phone: string; comment: string; pageLang: 'ru' | 'bg'; submissionId: string; token: string }
 
 function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: string } {
   if (!raw || typeof raw !== 'object') return { ok: false, field: 'body' };
@@ -65,8 +66,35 @@ function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: str
   if (r.consent !== true) return { ok: false, field: 'consent' };
   if (r.pageLang !== 'ru' && r.pageLang !== 'bg') return { ok: false, field: 'pageLang' };
   const submissionId = clean(r.submissionId, 64); if (!/^[A-Za-z0-9-]{8,64}$/.test(submissionId)) return { ok: false, field: 'submissionId' };
-  const token = clean(r.turnstileToken, 2048); if (!token) return { ok: false, field: 'turnstileToken' };
-  return { ok: true, d: { name, email, phone, comment, pageLang: r.pageLang, submissionId, token } };
+  const token = '';
+  const b = r.booking as Record<string, unknown> | undefined;
+  if (!b || !['accommodation', 'package', 'dinner'].includes(String(b.product))) return { ok: false, field: 'booking.product' };
+  if (![b.adults, b.children, b.infants].every(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 10) || (b.adults as number) < 1) return { ok: false, field: 'booking.guests' };
+  if (b.product !== 'dinner' && (![1,2,3,4].includes(Number(b.nights)) || !['classic','comfort','lux'].includes(String(b.room)) || !['double','single'].includes(String(b.occupancy)))) return { ok: false, field: 'booking.room' };
+  const roomGuests = b.product === 'dinner' ? [] : b.rooms;
+  if (b.product !== 'dinner' && (!Array.isArray(roomGuests) || roomGuests.length < 1 || roomGuests.length > 5 ||
+    !roomGuests.every(g => g && typeof g === 'object' && ['adults','children','infants'].every(k => Number.isInteger(g[k]) && g[k] >= (k === 'adults' ? 1 : 0) && g[k] <= 10)) ||
+    roomGuests.reduce((n, g) => n + g.adults, 0) !== b.adults ||
+    roomGuests.reduce((n, g) => n + g.children, 0) !== b.children ||
+    roomGuests.reduce((n, g) => n + g.infants, 0) !== b.infants)) return { ok: false, field: 'booking.rooms' };
+  const booking: Booking = { product: b.product as Booking['product'], nights: b.product === 'dinner' ? null : Number(b.nights), room: b.product === 'dinner' ? null : String(b.room), occupancy: b.product === 'dinner' ? null : String(b.occupancy), adults: Number(b.adults), children: Number(b.children), infants: Number(b.infants), estimatedTotal: null, rooms: b.product === 'dinner' ? [] : roomGuests as Booking['rooms'] };
+  // Recompute prices on the server; never trust a client-supplied total.
+  const rates: Record<string, Record<string, Record<string, number[]>>> = {
+    accommodation: { classic: { double: [71.65,121.79,182.69,207.06], single: [119.65,182.69,274.04,310.59] }, comfort: { double: [83.59,142.1,213.16,241.57], single: [139.59,213.15,319.73,362.35] }, lux: { double: [95.53,162.39,243.59,276.08], single: [159.53,243.58,365.37,414.12] } },
+    package: { classic: { double: [280.9,323.52,375.28,396], single: [321.7,375.29,452.93,484] }, comfort: { double: [291.05,340.79,401.18,425.33], single: [338.65,401.18,491.77,528] }, lux: { double: [301.2,358.03,427.05,454.67], single: [355.6,427.04,530.57,572] } },
+  };
+  if (booking.product === 'dinner') booking.estimatedTotal = booking.adults * 220 + booking.children * 132;
+  else {
+    const i = booking.nights! - 1;
+    const raw = booking.rooms!.reduce((sum, g) => {
+      const double = rates[booking.product][booking.room!].double[i];
+      const adultTotal = g.adults === 1 ? rates[booking.product][booking.room!].single[i] : double * (2 + Math.max(0, g.adults - 2) * 0.85);
+      const childStay = g.children * rates.accommodation[booking.room!].double[i] * 0.7;
+      return sum + adultTotal + childStay + (booking.product === 'package' ? g.children * 132 : 0);
+    }, 0);
+    booking.estimatedTotal = Math.round((raw + Number.EPSILON) * 100) / 100;
+  }
+  return { ok: true, d: { booking, name, email, phone, comment, pageLang: r.pageLang, submissionId, token } };
 }
 
 function buildEmail(d: Inquiry, when: Date) {
@@ -75,6 +103,15 @@ function buildEmail(d: Inquiry, when: Date) {
     ['Язык страницы', d.pageLang === 'ru' ? 'Русский (/ru/)' : 'Болгарский (/bg/)'],
     ['Дата и время заявки', `${local} (София), ${when.toISOString()}`],
     ['Имя', d.name], ['Email', d.email], ['Телефон', d.phone],
+    ['Предложение', d.booking.product === 'dinner' ? 'Только гала-ужин' : d.booking.product === 'package' ? 'Новогодний пакет с ужином' : 'Проживание без ужина'],
+    ['Ночей', d.booking.nights === null ? '—' : String(d.booking.nights)],
+    ['Категория номера', d.booking.room ?? '—'],
+    ['Размещение', d.booking.occupancy ?? '—'],
+    ['Номера', d.booking.rooms?.map((g, i) => `№${i + 1}: ${g.adults} взрослых, ${g.children} детей 2–11, ${g.infants} детей до 2`).join('; ') || '—'],
+    ['Взрослых', String(d.booking.adults)],
+    ['Детей 2–11 лет', String(d.booking.children)],
+    ['Детей до 2 лет', String(d.booking.infants)],
+    ['Предварительная стоимость', d.booking.estimatedTotal === null ? 'Уточняется' : d.booking.estimatedTotal.toFixed(2) + ' EUR'],
     ['Комментарий', d.comment || '—'],
   ];
   const text = rows.map(([k, v]) => `${k}: ${v}`).join('\n') + '\n\nЗаявка не является подтверждённым бронированием.';
@@ -115,6 +152,24 @@ async function sendBrevo(env: Env, d: Inquiry): Promise<boolean> {
   } catch { console.error('inquiry_error', 'brevo_unreachable'); return false; }
 }
 
+async function sendGoogle(env: Env, d: Inquiry): Promise<boolean> {
+  try {
+    const url = new URL(env.GOOGLE_SCRIPT_URL!);
+    if (url.protocol !== 'https:' || url.hostname !== 'script.google.com' || !url.pathname.startsWith('/macros/s/')) return false;
+    const res = await fetch(url.toString(), {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ token: env.GOOGLE_SCRIPT_TOKEN, inquiry: {
+        submissionId: d.submissionId, pageLang: d.pageLang, name: d.name, email: d.email,
+        phone: d.phone, comment: d.comment, booking: d.booking,
+      } }),
+      redirect: 'follow',
+    });
+    if (!res.ok) { console.error('inquiry_error', 'google_status', res.status); return false; }
+    const result = await res.json() as {ok?: boolean};
+    return result.ok === true;
+  } catch { console.error('inquiry_error', 'google_unreachable'); return false; }
+}
+
 export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> => {
   // 1) same-origin only
   const origin = request.headers.get('Origin');
@@ -122,7 +177,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (origin ? !allowed.has(origin) : request.headers.get('Sec-Fetch-Site') !== 'same-origin') return json(403, { ok: false, error: 'forbidden' });
 
   // 2) configuration (never pretend success when something is missing)
-  if (!env.BREVO_API_KEY || !env.BREVO_SENDER_EMAIL || !env.FORM_RECIPIENT_EMAIL || !env.TURNSTILE_SECRET_KEY) {
+  if (!env.GOOGLE_SCRIPT_URL || !env.GOOGLE_SCRIPT_TOKEN) {
     console.error('inquiry_error', 'not_configured');
     return json(503, { ok: false, error: 'not_configured' });
   }
@@ -139,7 +194,7 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
 
   // 4) rate limit per IP (hashed with a secret salt; the raw IP is not stored)
   const ip = request.headers.get('CF-Connecting-IP') ?? '';
-  const ipKey = await sha256Hex(`${ip}|${env.TURNSTILE_SECRET_KEY}`);
+  const ipKey = await sha256Hex(`${ip}|${env.GOOGLE_SCRIPT_TOKEN}`);
   const rlKey = `rl:${ipKey.slice(0, 32)}:${Math.floor(Date.now() / (RATE_WINDOW_S * 1000))}`;
   const used = Number((await store.get(env, rlKey)) ?? 0);
   if (used >= RATE_LIMIT) return json(429, { ok: false, error: 'rate_limited' }, { 'Retry-After': String(RATE_WINDOW_S) });
@@ -152,11 +207,10 @@ export const onRequestPost = async ({ request, env }: Ctx): Promise<Response> =>
   if (prev === 'pending') return json(409, { ok: false, error: 'in_progress' });
   await store.put(env, subKey, 'pending', 600);
 
-  // 6) Turnstile
-  if (!(await verifyTurnstile(env, d.token, ip))) { await store.del(env, subKey); return json(403, { ok: false, error: 'turnstile_failed' }); }
+  // 6) No CAPTCHA: honeypot, same-origin checks, validation and rate limit remain.
 
   // 7) send
-  if (!(await sendBrevo(env, d))) { await store.del(env, subKey); return json(502, { ok: false, error: 'send_failed' }); }
+  if (!(await sendGoogle(env, d))) { await store.del(env, subKey); return json(502, { ok: false, error: 'send_failed' }); }
   await store.put(env, subKey, 'done', 86400);
   return json(200, { ok: true });
 };

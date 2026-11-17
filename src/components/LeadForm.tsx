@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useSite } from '../context';
+import { useSite, useCalc } from '../context';
+import { eur, totalPrice } from '../data/prices';
+import { PRICES } from '../data/prices';
 import { config } from '../config';
 import { ContactCard } from './Sections';
 
@@ -14,7 +16,14 @@ declare global { interface Window { turnstile?: TurnstileApi } }
 
 export function LeadForm() {
   const { t, lang } = useSite();
+  const c = useCalc();
   const f = t.form;
+  const bg = lang === 'bg';
+  const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
+  const guests = c.rooms.reduce((a, g) => ({ adults: a.adults + g.adults, children: a.children + g.children, infants: a.infants + g.infants }), { adults: 0, children: 0, infants: 0 });
+  const calculatedTotal = totalPrice(c.product, c.room, c.nights, c.rooms, c.dinnerOnly);
+  const placementNeedsCheck = !c.dinnerOnly && c.rooms.some(g => g.adults > 2);
+  const offerName = c.dinnerOnly ? label('Только гала-ужин', 'Само гала вечеря') : c.product === 'package' ? label('Проживание с гала-ужином', 'Нощувки с гала вечеря') : label('Проживание без гала-ужина', 'Нощувки без гала вечеря');
   const [v, setV] = useState<Values>({ name: '', email: '', phone: '', comment: '', consent: false, website: '' });
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>('idle');
@@ -26,7 +35,7 @@ export function LeadForm() {
   const siteKey = config.turnstileSiteKey;
   const set = <K extends keyof Values>(k: K, val: Values[K]) => setV((p) => ({ ...p, [k]: val }));
 
-  // Cloudflare Turnstile (only when a public site key is configured)
+  // Cloudflare Turnstile (optional; not required for inquiry submission)
   useEffect(() => {
     if (!siteKey || !tsBox.current) return;
     const render = () => {
@@ -51,7 +60,7 @@ export function LeadForm() {
     if (!v.email.trim()) e.email = f.errRequired; else if (!EMAIL.test(v.email.trim())) e.email = f.errEmail;
     if (!v.phone.trim()) e.phone = f.errRequired; else if (!isPhone(v.phone.trim())) e.phone = f.errPhone;
     if (!v.consent) e.consent = f.errConsent;
-    if (siteKey && !token) e.turnstile = f.errTurnstile;
+
     return e;
   }
 
@@ -66,11 +75,13 @@ export function LeadForm() {
       return;
     }
     // Never pretend: without a Turnstile key the server cannot accept the form, so nothing is sent and the visitor is told so.
-    if (!siteKey) { setStatus('fail'); return; }
+
     if (!submissionId.current) submissionId.current = crypto.randomUUID();
     setStatus('sending');
     try {
+      const estimatedTotal = placementNeedsCheck ? null : Math.round(calculatedTotal * 100) / 100;
       const payload = {
+        booking: { product: c.dinnerOnly ? 'dinner' : c.product, nights: c.dinnerOnly ? null : c.nights, room: c.dinnerOnly ? null : c.room, occupancy: c.dinnerOnly ? null : (c.rooms.length === 1 && c.rooms[0].adults === 1 ? 'single' : 'double'), rooms: c.dinnerOnly ? [] : c.rooms, adults: guests.adults, children: guests.children, infants: guests.infants, estimatedTotal },
         name: v.name.trim(), email: v.email.trim(), phone: v.phone.trim(), comment: v.comment.trim(),
         consent: true, pageLang: lang, submissionId: submissionId.current, turnstileToken: token, website: v.website,
       };
@@ -95,6 +106,16 @@ export function LeadForm() {
           <ContactCard id="contact" />
         </div>
         <form ref={formRef} onSubmit={onSubmit} noValidate>
+          <div className="booking-summary" aria-live="polite">
+            <h3>{label('Ваш выбор', 'Вашият избор')}</h3>
+            <p><strong>{offerName}</strong></p>
+            {!c.dinnerOnly && <p>{c.nights} {label('ноч.', 'нощ.')}, {c.room === 'classic' ? 'Classic' : c.room === 'comfort' ? 'Comfort' : 'Lux'}, {c.rooms.length} {label('ном.', 'стаи')}</p>}
+            <p>{label('Взрослые', 'Възрастни')}: {guests.adults} · {label('Дети 2–11 лет', 'Деца 2–11 г.')}: {guests.children} · {label('Дети до 2 лет', 'Деца под 2 г.')}: {guests.infants}</p>
+            {!c.dinnerOnly && c.rooms.length > 1 && <p>{c.rooms.map((g, i) => `${label('Номер', 'Стая')} ${i + 1}: ${g.adults} + ${g.children} + ${g.infants}`).join(' · ')}</p>}
+            <strong className="booking-summary__price">{eur(calculatedTotal)}</strong>
+            {placementNeedsCheck && <p className="booking-summary__note">{label('Предварительная сумма. Условия размещения и доплата за дополнительные места подтверждаются отелем.', 'Предварителна сума. Настаняването и доплащането за допълнителни легла се потвърждават от хотела.')}</p>}
+            <a className="booking-summary__edit" href="#offer-calculator">{label('Изменить параметры расчёта', 'Промени параметрите на изчислението')}</a>
+          </div>
           {Object.keys(errors).length > 0 && <p className="err err--sum" role="alert">{f.errSummary}</p>}
           <label className="field">{f.name}
             <input type="text" autoComplete="name" value={v.name} onChange={(e) => set('name', e.target.value)} {...common('name')} /><Err k="name" />

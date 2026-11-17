@@ -32,3 +32,18 @@ export const GALA_DINNER = { adult: 220.0, child2to11: 132.0 }; // restaurant «
 export const STAY_PERIOD = { from: '2026-12-29', to: '2027-01-02' };
 
 export const eur = (n: number) => n.toFixed(2).replace('.', ',') + ' €';
+
+export interface RoomGuests { adults: number; children: number; infants: number }
+export const roomPrice = (product: ProductId, room: RoomId, nights: Nights, guests: RoomGuests): number => {
+  const i = nights - 1;
+  const adultPrice = guests.adults === 1 ? PRICES[product][room].single[i] :
+    guests.adults >= 2 ? PRICES[product][room].double[i] * (2 + (guests.adults - 2) * 0.85) : 0;
+  const childStay = guests.children * PRICES.accommodation[room].double[i] * 0.7;
+  return adultPrice + childStay + (product === 'package' ? guests.children * GALA_DINNER.child2to11 : 0);
+};
+export const totalPrice = (product: ProductId, room: RoomId, nights: Nights, rooms: RoomGuests[], dinnerOnly: boolean): number => {
+  const raw = dinnerOnly
+    ? rooms.reduce((sum, g) => sum + g.adults * GALA_DINNER.adult + g.children * GALA_DINNER.child2to11, 0)
+    : rooms.reduce((sum, g) => sum + roomPrice(product, room, nights, g), 0);
+  return Math.round((raw + Number.EPSILON) * 100) / 100;
+};

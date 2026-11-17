@@ -140,7 +140,7 @@ th,td{padding:10px 12px;text-align:center;border:1px solid var(--line)}
 thead th{background:var(--teal);color:var(--milk);border-color:rgba(249,246,240,.2)}
 thead th.sub{font-weight:600;font-size:12px;background:#1d3b49}
 tbody th{text-align:left;white-space:nowrap;background:var(--milk);position:sticky;left:0}
-td.sel{background:var(--bronze);color:var(--teal-d);font-weight:800}
+/* Tariff tables are reference-only: no misleading selected-price highlight. */
 .ptable--package thead th{background:var(--teal-d)}
 
 /* galleries */
@@ -290,4 +290,33 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
   .plovdiv{align-items:stretch}
   .plovdiv__fig{display:flex;flex-direction:column}
   .plovdiv__fig .arch-img{flex:1;height:100%;aspect-ratio:auto;min-height:0;object-position:58% center}
+}
+
+/* Calculator: make the next step obvious on narrow screens */
+.calc__view-result{display:none}
+@media(max-width:1000px){.calc__view-result{display:block;width:100%;background:var(--teal);color:var(--milk);text-align:center}.calc__result{scroll-margin-top:calc(var(--hdr) + 18px)}.calc__price{font-size:clamp(38px,10vw,64px);overflow-wrap:anywhere}}
+
+/* Compact, readable booking recap in the inquiry form (no nested calculator) */
+.booking-summary{background:#f8f4ed;color:#18313d;border:1px solid #cdbda9;border-radius:8px;padding:clamp(16px,3vw,28px);margin-bottom:24px;overflow-wrap:anywhere}
+.booking-summary h3{color:#18313d;font-size:clamp(22px,2vw,30px);margin:0 0 12px}
+.booking-summary p{color:#18313d;margin:8px 0;line-height:1.5;font-size:16px}
+.booking-summary__price{display:block;font-size:clamp(32px,5vw,52px);line-height:1.2;color:#18313d;margin:14px 0 10px;overflow-wrap:anywhere}
+.booking-summary .booking-summary__note{font-size:14px}
+.booking-summary__edit{display:inline-block;color:#18313d;text-decoration:underline;font-weight:700;margin-top:12px}
+#apply,#contact{scroll-margin-top:110px}
+
+/* Contact numbers are copyable text on desktop; tap-to-call on mobile. */
+.phone-value__mobile{display:none}
+.contact__call{display:none!important}
+@media(max-width:640px){.phone-value__desktop{display:none}.phone-value__mobile{display:inline}.contact__call{display:flex!important}}
+/* Align gala dinner prices in a consistent second column on desktop and mobile. */
+.cover div{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,auto);gap:16px;align-items:center}
+.cover dd{text-align:right;margin:0}
+.cover dd small{display:block;line-height:1.35}
+/* Mobile gala dinner tariff: consistent label and price columns. */
+@media (max-width:640px){
+  .cover div{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,auto);gap:12px;align-items:center;padding:16px 0}
+  .cover dt{min-width:0;line-height:1.35}
+  .cover dd{margin:0;min-width:0;text-align:right;font-size:clamp(22px,6vw,30px);line-height:1.2;overflow-wrap:normal}
+  .cover dd small{display:block;font-size:12px;line-height:1.4;margin-top:3px}
 }
