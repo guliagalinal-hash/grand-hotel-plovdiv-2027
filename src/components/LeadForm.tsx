@@ -4,6 +4,7 @@ import { eur, totalPrice } from '../data/prices';
 import { PRICES } from '../data/prices';
 import { config } from '../config';
 import { ContactCard } from './Sections';
+import { trackEvent } from '../analytics';
 
 interface Values { name: string; email: string; phone: string; comment: string; consent: boolean; website: string }
 type Errors = Partial<Record<keyof Values | 'turnstile', string>>;
@@ -87,7 +88,10 @@ export function LeadForm() {
       };
       const res = await fetch(config.formEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => null) as { ok?: boolean } | null;
-      if (res.ok && data?.ok === true) { setStatus('ok'); return; }
+      if (res.ok && data?.ok === true) {
+        trackEvent('inquiry_submit_success', { offer_type: c.dinnerOnly ? 'dinner' : c.product });
+        setStatus('ok'); return;
+      }
       setStatus(res.status === 429 ? 'limit' : 'fail');
     } catch { setStatus('fail'); }
     // Turnstile tokens are single-use: ask for a fresh one before a retry.
