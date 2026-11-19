@@ -144,8 +144,8 @@ export function ContactCard({ id }: { id?: string }) {
     <div className="contact" id={id}>
       <h3>{c.title}</h3>
       <ul className="contact__list">
-        <li><span>{c.phone}</span><span className="phone-value"><span className="phone-value__desktop">{k.phoneDisplay}</span><a className="phone-value__mobile" href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></span></li>
-        <li><span>{c.viber}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
+        <li><span>{c.phone}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
+        <li><span>{c.viber}</span><a href={`viber://chat?number=${encodeURIComponent(k.phoneRaw)}`}>{k.phoneDisplay}</a></li>
         <li><span>{c.email}</span><a href={`mailto:${k.email}`}>{k.email}</a></li>
       </ul>
       <div className="contact__btns">
@@ -173,7 +173,7 @@ export function Footer() {
           <div className="foot__seller">
             <p className="foot__sub">{c.title}</p>
             <p><span>{c.phone}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
-            <p><span>{c.viber}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
+            <p><span>{c.viber}:</span> <a href={`viber://chat?number=${encodeURIComponent(k.phoneRaw)}`}>{k.phoneDisplay}</a></p>
             <p><span>{c.email}:</span> <a href={`mailto:${k.email}`}>{k.email}</a></p>
           </div>
           {(filled.length > 0 || s.privacyUrl) && (
