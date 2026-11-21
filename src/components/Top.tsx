@@ -10,7 +10,7 @@ export function Header() {
   const links: [string, string][] = [
     ['#program', t.nav.program], ['#prices', t.nav.prices], ['#rooms', t.nav.rooms],
     ['#spa', t.nav.spa], ['#dining', t.nav.dining], ['#plovdiv', t.nav.plovdiv], ['#terms', t.nav.terms],
-    ['#contact', lang === 'bg' ? 'Контакти' : 'Контакты'],
+    ['#contacts', lang === 'bg' ? 'Контакти' : 'Контакты'],
   ];
   return (
     <header className="hdr">
