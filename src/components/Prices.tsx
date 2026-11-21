@@ -44,7 +44,7 @@ export function Offers() {
             <p className="offer__price">{o.C.price}</p>
             <p className="offer__per">{o.C.per}</p>
             <p className="offer__desc">{o.C.desc}</p>
-            <button type="button" className="btn btn--outline" aria-pressed={c.dinnerOnly} onClick={() => { c.setDinnerOnly(true); goToCalculator(); }}>{c.dinnerOnly ? o.picked : o.pick}</button>
+            <button type="button" className="btn btn--outline" onClick={() => { c.setDinnerOnly(true); requestAnimationFrame(() => window.dispatchEvent(new Event('open-calculator-inquiry'))); }}>{lang === 'bg' ? 'Изпрати запитване' : 'Отправить заявку'}</button>
           </article>
         </div>
 
