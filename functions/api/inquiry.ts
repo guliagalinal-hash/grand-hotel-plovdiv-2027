@@ -104,7 +104,7 @@ function buildEmail(d: Inquiry, when: Date) {
     ['Язык страницы', d.pageLang === 'ru' ? 'Русский (/ru/)' : 'Болгарский (/bg/)'],
     ['Дата и время заявки', `${local} (София), ${when.toISOString()}`],
     ['Имя', d.name], ['Email', d.email], ['Телефон', d.phone],
-    ['Предложение', d.booking.product === 'dinner' ? 'Только гала-ужин' : d.booking.product === 'package' ? 'Новогодний пакет с ужином' : 'Проживание без ужина'],
+    ['Предложение', d.booking.product === 'dinner' ? 'Только гала-ужин' : d.booking.product === 'package' ? 'Новогодний пакет с ужином' : d.booking.product === 'inquiry' ? 'Общий запрос без выбранного предложения' : 'Проживание без ужина'],
     ['Ночей', d.booking.nights === null ? '—' : String(d.booking.nights)],
     ['Категория номера', d.booking.room ?? '—'],
     ['Размещение', d.booking.occupancy ?? '—'],
