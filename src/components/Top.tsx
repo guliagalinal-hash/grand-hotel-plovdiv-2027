@@ -23,7 +23,7 @@ export function Header() {
           <a className="hdr__contact" href={`tel:${config.contact.phoneRaw}`} aria-label="Phone">☎</a>
           <a className="hdr__contact" href={`viber://chat?number=${encodeURIComponent(config.contact.phoneRaw)}`} aria-label="Viber">Viber</a>
           <a className="hdr__contact" href={config.contact.telegramUrl} target="_blank" rel="noopener noreferrer" aria-label="Telegram">TG</a>
-          <button type="button" className="btn btn--sm hdr__cta" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Запитване' : 'Забронировать'}</button>
+          <button type="button" className="btn btn--sm hdr__cta" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Проверете наличността' : 'Уточнить наличие мест'}</button>
           <button type="button" className="burger" aria-expanded={open} aria-controls="nav" aria-label={t.nav.menu} onClick={() => setOpen(!open)}>
             <span /><span /><span />
           </button>
@@ -51,7 +51,7 @@ export function Hero() {
           <p>{lang === 'bg' ? 'Вариант 1: Нощувка без гала вечеря — от 71,65 €' : 'Вариант 1: Проживание без гала-ужина — от 71,65 €'}</p>
           <p>{lang === 'bg' ? 'Вариант 2: Новогодишен пакет с гала вечеря — от 280,90 €' : 'Вариант 2: Новогодний пакет с гала-ужином — от 280,90 €'}</p>
         </div>
-        <div className="hero__actions"><a className="btn btn--lg" href="#prices">{h.cta}</a><button type="button" className="btn btn--lg btn--outline" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Изпратете запитване' : 'Забронировать'}</button></div>
+        <div className="hero__actions"><a className="btn btn--lg" href="#prices">{h.cta}</a><button type="button" className="btn btn--lg btn--outline" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Проверете наличността' : 'Уточнить наличие мест'}</button></div>
       </div>
     </section>
   );
