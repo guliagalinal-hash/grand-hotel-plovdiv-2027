@@ -373,3 +373,7 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 
 
 .hero__starting-prices p{margin:.2rem 0}
+
+/* Make the secondary hero action legible over a dark photo */
+.hero__actions .btn--outline{color:#fff;border:2px solid rgba(255,255,255,.92);background:rgba(15,39,48,.68)}
+.hero__actions .btn--outline:hover,.hero__actions .btn--outline:focus-visible{color:#fff;background:rgba(15,39,48,.95)}
