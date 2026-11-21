@@ -47,6 +47,8 @@ export function Hero() {
         <p className="hero__theme">{h.theme}</p>
         <p className="hero__dates">{h.dates}</p>
         <p className="hero__description">{lang === 'bg' ? 'Празнична почивка с новогодишна програма и гала вечеря или без тях.' : 'Праздничный отдых с новогодней программой и гала-ужином или без них.'}</p>
+        <p className="hero__starting-prices">{lang === 'bg' ? 'Нощувка от 71,65 € · Новогодишен пакет с гала вечеря от 280,90 €' : 'Проживание от 71,65 € · Новогодний пакет с гала-ужином от 280,90 €'}</p>
+        <p className="hero__price-note">{lang === 'bg' ? 'На човек за 1 нощувка, едно легло в двойна стая Classic. Гала вечерята е включена само в новогодишния пакет.' : 'За человека за 1 ночь, место в двухместном номере Classic. Гала-ужин включён только в новогодний пакет.'}</p>
         <div className="hero__actions"><a className="btn btn--lg" href="#prices">{h.cta}</a><button type="button" className="btn btn--lg btn--outline" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Изпратете запитване' : 'Забронировать'}</button></div>
       </div>
     </section>
