@@ -359,3 +359,11 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 .inquiry-close{position:sticky;top:0;float:right;margin:-60px -4px 12px 12px;width:52px;height:52px;min-width:52px;min-height:52px;background:var(--milk);color:var(--teal-d);border:2px solid var(--teal);border-radius:50%;font:700 34px/1 var(--sans);box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:5;cursor:pointer}
 .inquiry-close:hover,.inquiry-close:focus-visible{background:var(--sand);outline:3px solid var(--bronze);outline-offset:2px}
 @media(max-width:760px){.inquiry-dialog{padding-top:72px!important}.inquiry-close{margin-top:-57px}}
+
+/* Footer: contact details left, Google hotel location right */
+.foot__cols--map{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start;gap:32px}
+.foot__map{min-width:0}
+.foot__map iframe{display:block;width:100%;height:280px;border:0;border-radius:8px;background:var(--sand)}
+.foot__map>a{display:inline-block;margin-top:12px;font-weight:700;text-underline-offset:3px;min-height:44px;padding:8px 0}
+.foot__legal{border-top:1px solid rgba(249,246,240,.22);margin-top:32px;padding-top:24px;font-size:14px}
+@media(max-width:760px){.foot__cols--map{grid-template-columns:1fr;gap:24px}.foot__map iframe{height:260px}}
