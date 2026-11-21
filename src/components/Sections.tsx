@@ -158,7 +158,7 @@ export function ContactCard({ id }: { id?: string }) {
 }
 
 export function Footer() {
-  const { t } = useSite();
+  const { t, lang } = useSite();
   const s = config.seller;
   const k = config.contact;
   const c = t.contact;
@@ -170,7 +170,7 @@ export function Footer() {
       <div className="wrap foot__in">
         <h2 className="foot__h">{f.title}</h2>
         <p className="foot__disc">{f.disclosure}</p>
-        <div className="foot__cols">
+        <div className="foot__cols foot__cols--map">
           <div className="foot__seller">
             <p className="foot__sub">{c.title}</p>
             <p><span>{c.phone}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
@@ -178,14 +178,25 @@ export function Footer() {
             <p><span>Telegram:</span> <a href={k.telegramUrl} target="_blank" rel="noopener noreferrer">@globacheva</a></p>
             <p><span>{c.email}:</span> <a href={`mailto:${k.email}`}>{k.email}</a></p>
           </div>
-          {(filled.length > 0 || s.privacyUrl) && (
-            <div className="foot__seller">
-              <p className="foot__sub">{f.legal}</p>
-              {filled.map(([kk, v]) => <p key={kk}><span>{kk}:</span> {v}</p>)}
-              {s.privacyUrl && <p><a href={s.privacyUrl} target="_blank" rel="noopener noreferrer">{f.privacy}</a></p>}
-            </div>
-          )}
+          <div className="foot__map">
+            <p className="foot__sub">{t.nav.plovdiv}: Grand Hotel Plovdiv</p>
+            <iframe
+              title={t.nav.plovdiv + ': Grand Hotel Plovdiv'}
+              src="https://www.google.com/maps?q=Grand%20Hotel%20Plovdiv%2C%20Bulgaria&output=embed"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+            <a href="https://www.google.com/maps/search/?api=1&query=Grand%20Hotel%20Plovdiv%2C%20Bulgaria" target="_blank" rel="noopener noreferrer">{lang === 'bg' ? 'Отвори в Google Maps' : 'Открыть в Google Картах'}</a>
+          </div>
         </div>
+        {(filled.length > 0 || s.privacyUrl) && (
+          <div className="foot__legal">
+            <p className="foot__sub">{f.legal}</p>
+            {filled.map(([kk, v]) => <p key={kk}><span>{kk}:</span> {v}</p>)}
+            {s.privacyUrl && <p><a href={s.privacyUrl} target="_blank" rel="noopener noreferrer">{f.privacy}</a></p>}
+          </div>
+        )}
       </div>
     </footer>
   );
