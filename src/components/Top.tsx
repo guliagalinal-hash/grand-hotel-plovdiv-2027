@@ -47,8 +47,10 @@ export function Hero() {
         <p className="hero__theme">{h.theme}</p>
         <p className="hero__dates">{h.dates}</p>
         <p className="hero__description">{lang === 'bg' ? 'Празнична почивка с новогодишна програма и гала вечеря или без тях.' : 'Праздничный отдых с новогодней программой и гала-ужином или без них.'}</p>
-        <p className="hero__starting-prices">{lang === 'bg' ? 'Нощувка от 71,65 € · Новогодишен пакет с гала вечеря от 280,90 €' : 'Проживание от 71,65 € · Новогодний пакет с гала-ужином от 280,90 €'}</p>
-        <p className="hero__price-note">{lang === 'bg' ? 'На човек за 1 нощувка, едно легло в двойна стая Classic. Гала вечерята е включена само в новогодишния пакет.' : 'За человека за 1 ночь, место в двухместном номере Classic. Гала-ужин включён только в новогодний пакет.'}</p>
+        <div className="hero__starting-prices" aria-label={lang === 'bg' ? 'Два алтернативни варианта' : 'Два варианта на выбор'}>
+          <p>{lang === 'bg' ? 'Вариант 1: Нощувка без гала вечеря — от 71,65 €' : 'Вариант 1: Проживание без гала-ужина — от 71,65 €'}</p>
+          <p>{lang === 'bg' ? 'Вариант 2: Новогодишен пакет с гала вечеря — от 280,90 €' : 'Вариант 2: Новогодний пакет с гала-ужином — от 280,90 €'}</p>
+        </div>
         <div className="hero__actions"><a className="btn btn--lg" href="#prices">{h.cta}</a><button type="button" className="btn btn--lg btn--outline" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Изпратете запитване' : 'Забронировать'}</button></div>
       </div>
     </section>
