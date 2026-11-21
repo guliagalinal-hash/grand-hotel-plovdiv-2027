@@ -345,3 +345,11 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 @media(max-width:380px){.hdr__in{gap:8px}.hdr__right{gap:8px}.hdr__contact:not(:first-child){display:none}.brand{font-size:21px}.burger{flex-shrink:0}}
 .inquiry-close{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
 .inquiry-dialog{overscroll-behavior:contain}
+
+/* Accessible, separate header contact touch targets */
+.hdr__contact{display:inline-flex;align-items:center;justify-content:center;min-width:48px;min-height:44px;padding:0 8px;margin:0;border-radius:6px;font-size:14px;text-decoration:none}
+.hdr__contact:hover,.hdr__contact:focus-visible{background:rgba(249,246,240,.14)}
+.hdr__right{gap:8px}
+@media(min-width:1001px) and (max-width:1250px){.nav{gap:12px}.hdr__right{gap:4px}.hdr__contact{min-width:44px;padding:0 6px}}
+@media(max-width:760px){.hdr__contact{min-width:44px;min-height:44px;font-size:13px;margin:0}.hdr__right{gap:4px}}
+@media(max-width:380px){.hdr__contact:not(:first-child){display:none}}
