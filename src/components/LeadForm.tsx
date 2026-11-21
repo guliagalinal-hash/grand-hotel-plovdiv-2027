@@ -142,6 +142,7 @@ export function LeadForm() {
         <div>
           <h2>{f.title}</h2>
           <p className="lead">{f.lead}</p>
+          <p className="note">{label("Отправьте запрос, и мы уточним наличие мест и окончательную стоимость. Отправка формы не является бронированием.", "Изпратете запитване и ще уточним наличността и крайната цена. Изпращането на формата не представлява резервация.")}</p>
           
         </div>
         <form ref={formRef} onSubmit={onSubmit} noValidate>
