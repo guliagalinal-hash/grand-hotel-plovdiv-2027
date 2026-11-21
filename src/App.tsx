@@ -1,7 +1,7 @@
 import { useSite } from './context';
 import { Header, Hero, Advantages, Program } from './components/Top';
 import { Offers } from './components/Prices';
-import { RoomsSection, SpaSection, DiningSection, PlovdivSection, DinnerSection, TermsSection, Footer } from './components/Sections';
+import { RoomsSection, SpaSection, DiningSection, PlovdivSection, DinnerSection, TermsSection, ContactCard, Footer } from './components/Sections';
 import { LeadForm } from './components/LeadForm';
 
 export function App() {
@@ -21,6 +21,7 @@ export function App() {
         <PlovdivSection />
         <DinnerSection />
         <TermsSection />
+        <section className="sec sec--dark" id="contact"><div className="wrap"><ContactCard /></div></section>
         <LeadForm />
       </main>
       <Footer />
