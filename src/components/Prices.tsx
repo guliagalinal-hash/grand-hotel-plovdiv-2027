@@ -132,8 +132,8 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           <button type="button" className="btn btn--lg btn--toggle" aria-expanded={open} aria-controls="all-prices" onClick={onToggle}>
             {k.showAll}<span className="chev" aria-hidden="true" />
           </button>
-          <button type="button" className="btn btn--outline" onClick={() => window.dispatchEvent(new Event('open-calculator-inquiry'))}>{label("Отправить заявку", "Изпрати запитване")}</button>
-        </div>}
+          <button type="button" className="btn btn--outline" onClick={() => window.dispatchEvent(new Event('open-calculator-inquiry'))}>{label("Уточнить наличие мест", "Проверете наличността")}</button>
+        <p className="note">{label("Отправьте запрос, и мы уточним наличие мест и окончательную стоимость. Это не бронирование.", "Изпратете запитване и ще уточним наличността и крайната цена. Това не е резервация.")}</p></div>}
       </div>
     </div>
   );
