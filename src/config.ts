@@ -32,6 +32,7 @@ export const config = {
     phoneDisplay: '+359 89 539 6896',
     phoneRaw: '+359895396896', // used for the tel: link
     email: 'info@wordofethnic.com',
+    telegramUrl: 'https://t.me/globacheva',
   },
 
   /** Legal data of the seller. Empty values are simply not shown on the page. */
