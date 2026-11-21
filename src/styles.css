@@ -320,3 +320,23 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
   .cover dd{margin:0;min-width:0;text-align:right;font-size:clamp(22px,6vw,30px);line-height:1.2;overflow-wrap:normal}
   .cover dd small{display:block;font-size:12px;line-height:1.4;margin-top:3px}
 }
+
+/* Conversion update: compact offers and accessible inquiry modal */
+.hdr__contact{font-size:.8rem;text-decoration:none;white-space:nowrap;margin-inline:.25rem}
+.hero__hotel{font-size:clamp(1.15rem,2.5vw,1.8rem);font-weight:600;margin:.5rem 0}
+.hero__description{max-width:42rem;line-height:1.5;font-size:clamp(1rem,2vw,1.2rem)}
+.hero__actions{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.25rem}
+.offers--compact{gap:.8rem}
+.offers--compact .offer{padding:1.1rem;border-radius:12px}
+.offers--compact .offer h3{font-size:1.15rem}
+.offers--compact .offer__price{font-size:1.5rem}
+.offers--compact .offer__desc{font-size:.9rem}
+.inquiry-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.inquiry-dialog{position:relative;width:min(100%,680px);max-height:calc(100dvh - 2rem);overflow-y:auto;border-radius:16px;padding:1.4rem!important;box-shadow:0 20px 80px #0008}
+.inquiry-dialog .wrap{width:100%;max-width:none;padding:0}
+.inquiry-dialog .apply{display:block}
+.inquiry-dialog .apply>div:first-child{margin-bottom:1rem}
+.inquiry-dialog h2{font-size:clamp(1.5rem,3vw,2rem)}
+.inquiry-dialog .lead{font-size:.95rem}
+.inquiry-close{position:absolute;top:.4rem;right:.7rem;border:0;background:transparent;color:inherit;font-size:2rem;cursor:pointer;z-index:1}
+@media(max-width:760px){.hdr__contact{font-size:.72rem;margin-inline:0}.hdr__right{gap:.3rem}.hero__actions{flex-direction:column;align-items:flex-start}.inquiry-dialog{padding:1rem!important}}
