@@ -3,7 +3,6 @@ import { useSite, useCalc } from '../context';
 import { eur, totalPrice } from '../data/prices';
 import { PRICES } from '../data/prices';
 import { config } from '../config';
-import { ContactCard } from './Sections';
 import { trackEvent } from '../analytics';
 
 interface Values { name: string; email: string; phone: string; comment: string; consent: boolean; website: string }
@@ -108,7 +107,7 @@ export function LeadForm() {
       requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
       return;
     }
-    // Never pretend: without a Turnstile key the server cannot accept the form, so nothing is sent and the visitor is told so.
+    // Submit to the configured Cloudflare Function; only its confirmed success counts.
 
     if (!submissionId.current) submissionId.current = crypto.randomUUID();
     setStatus('sending');
@@ -122,7 +121,7 @@ export function LeadForm() {
       const res = await fetch(config.formEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => null) as { ok?: boolean } | null;
       if (res.ok && data?.ok === true) {
-        trackEvent('inquiry_submit_success', { offer_type: c.dinnerOnly ? 'dinner' : c.product });
+        trackEvent('inquiry_submit_success', { offer_type: !fromCalculator ? 'general' : c.dinnerOnly ? 'dinner' : c.product });
         setStatus('ok'); return;
       }
       setStatus(res.status === 429 ? 'limit' : 'fail');
@@ -154,7 +153,7 @@ export function LeadForm() {
             {!c.dinnerOnly && c.rooms.length > 1 && <p>{c.rooms.map((g, i) => `${label('Номер', 'Стая')} ${i + 1}: ${g.adults} + ${g.children} + ${g.infants}`).join(' · ')}</p>}
             <strong className="booking-summary__price">{eur(calculatedTotal)}</strong>
             {placementNeedsCheck && <p className="booking-summary__note">{label('Предварительная сумма. Условия размещения и доплата за дополнительные места подтверждаются отелем.', 'Предварителна сума. Настаняването и доплащането за допълнителни легла се потвърждават от хотела.')}</p>}
-            <a className="booking-summary__edit" href="#offer-calculator">{label('Изменить параметры расчёта', 'Промени параметрите на изчислението')}</a>
+            <a className="booking-summary__edit" href="#offer-calculator" onClick={() => setIsOpen(false)}>{label('Изменить параметры расчёта', 'Промени параметрите на изчислението')}</a>
           </div>}
           {Object.keys(errors).length > 0 && <p className="err err--sum" role="alert">{f.errSummary}</p>}
           <label className="field">{f.name}
@@ -168,9 +167,7 @@ export function LeadForm() {
               <input type="tel" autoComplete="tel" value={v.phone} onChange={(e) => set('phone', e.target.value)} {...common('phone')} /><Err k="phone" />
             </label>
           </div>
-          <label className="field">{f.comment} <small>({f.commentOpt})</small>
-            <textarea rows={3} maxLength={2000} value={v.comment} onChange={(e) => set('comment', e.target.value)} />
-          </label>
+          
           <label className="hp" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={v.website} onChange={(e) => set('website', e.target.value)} /></label>
           <label className="check">
             <input type="checkbox" checked={v.consent} onChange={(e) => set('consent', e.target.checked)} {...common('consent')} />
