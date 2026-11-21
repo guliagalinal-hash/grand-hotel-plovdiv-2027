@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSite } from '../context';
+import { config } from '../config';
 import { HERO, LOBBY, type Img } from '../data/images';
 import { Pic } from './Pic';
 
@@ -19,7 +20,10 @@ export function Header() {
           {links.map(([h, l]) => <a key={h} href={h} onClick={() => setOpen(false)}>{l}</a>)}
         </nav>
         <div className="hdr__right">
-          <a className="btn btn--sm hdr__cta" href="#offer-calculator">{t.cta}</a>
+          <a className="hdr__contact" href={`tel:${config.contact.phoneRaw}`} aria-label="Phone">☎</a>
+          <a className="hdr__contact" href={`viber://chat?number=${encodeURIComponent(config.contact.phoneRaw)}`} aria-label="Viber">Viber</a>
+          <a className="hdr__contact" href={config.contact.telegramUrl} target="_blank" rel="noopener noreferrer" aria-label="Telegram">TG</a>
+          <button type="button" className="btn btn--sm hdr__cta" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Запитване' : 'Забронировать'}</button>
           <button type="button" className="burger" aria-expanded={open} aria-controls="nav" aria-label={t.nav.menu} onClick={() => setOpen(!open)}>
             <span /><span /><span />
           </button>
@@ -30,7 +34,7 @@ export function Header() {
 }
 
 export function Hero() {
-  const { t } = useSite();
+  const { t, lang } = useSite();
   const h = t.hero;
   return (
     <section className="hero" id="top">
@@ -38,14 +42,12 @@ export function Hero() {
       <div className="hero__shade" aria-hidden="true" />
       <div className="wrap hero__in">
         <p className="eyebrow">{h.eyebrow}</p>
-        <h1>{h.title.split('5★')[0]}<span className="five">5★</span></h1>
+        <h1>{lang === 'bg' ? 'Нова година 2027 в Пловдив' : 'Новый год 2027 в Пловдиве'}</h1>
+        <p className="hero__hotel">Grand Hotel Plovdiv 5★</p>
         <p className="hero__theme">{h.theme}</p>
         <p className="hero__dates">{h.dates}</p>
-        <div className="hero__prices">
-          <p>{h.a.pre}<strong>{h.a.price}</strong>{h.a.post} <em className="hero__sub">{h.a.sub}</em></p>
-          <p>{h.b.pre}<strong>{h.b.price}</strong>{h.b.post}</p>
-        </div>
-        <a className="btn btn--lg" href="#prices">{h.cta}</a>
+        <p className="hero__description">{lang === 'bg' ? 'Празнична почивка с новогодишна програма и гала вечеря или без тях.' : 'Праздничный отдых с новогодней программой и гала-ужином или без них.'}</p>
+        <div className="hero__actions"><a className="btn btn--lg" href="#prices">{h.cta}</a><button type="button" className="btn btn--lg btn--outline" onClick={() => window.dispatchEvent(new Event('open-inquiry'))}>{lang === 'bg' ? 'Изпратете запитване' : 'Забронировать'}</button></div>
       </div>
     </section>
   );
