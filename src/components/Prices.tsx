@@ -23,7 +23,7 @@ export function Offers() {
           <p className="lead">{o.lead}</p>
         </div>
 
-        <p className="offers__children">{lang === 'bg' ? 'Деца под 2 години безплатно; деца от 2 до 11 години включително — с отстъпка. Точните условия са в калкулатора.' : 'Дети до 2 лет бесплатно; дети от 2 до 11 лет включительно — со скидкой. Точные условия — в калькуляторе.'}</p>
+        <p className="offers__children">{lang === 'bg' ? 'Деца под 2 години безплатно; деца от 2 до 11 години включително — с отстъпка. Подробности за цените и настаняването ще видите в калкулатора.' : 'Дети до 2 лет бесплатно; дети от 2 до 11 лет включительно — со скидкой. Подробности о стоимости и размещении смотрите в калькуляторе.'}</p>
         <div className="offers offers--compact">
           {(['accommodation', 'package'] as const).map((p) => {
             const copy = p === 'accommodation' ? o.A : o.B;
@@ -44,7 +44,7 @@ export function Offers() {
             <p className="offer__price">{o.C.price}</p>
             <p className="offer__per">{o.C.per}</p>
             <p className="offer__desc">{o.C.desc}</p>
-            <button type="button" className="btn btn--outline" onClick={() => { c.setDinnerOnly(true); requestAnimationFrame(() => window.dispatchEvent(new Event('open-calculator-inquiry'))); }}>{lang === 'bg' ? 'Изпрати запитване' : 'Отправить заявку'}</button>
+            <button type="button" className="btn btn--outline" onClick={() => { c.setDinnerOnly(true); goToCalculator(); }}>{lang === 'bg' ? 'Изпрати запитване' : 'Отправить заявку'}</button>
           </article>
         </div>
 
