@@ -70,7 +70,7 @@ export function LeadForm() {
 
   // Cloudflare Turnstile (optional; not required for inquiry submission)
   useEffect(() => {
-    if (!siteKey || !tsBox.current) return;
+    if (!siteKey || !isOpen || !tsBox.current) return;
     const render = () => {
       if (!window.turnstile || !tsBox.current || tsId.current) return;
       tsId.current = window.turnstile.render(tsBox.current, {
@@ -85,7 +85,7 @@ export function LeadForm() {
       s.async = true; s.defer = true; s.onload = render;
       document.head.appendChild(s);
     }
-  }, [siteKey, lang]);
+  }, [siteKey, lang, isOpen]);
 
   function validate(): Errors {
     const e: Errors = {};
@@ -126,7 +126,7 @@ export function LeadForm() {
       }
       setStatus(res.status === 429 ? 'limit' : 'fail');
     } catch { setStatus('fail'); }
-    // Turnstile tokens are single-use: ask for a fresh one before a retry.
+    // If Turnstile is enabled, its tokens are single-use.
     setToken(''); if (tsId.current) window.turnstile?.reset(tsId.current);
   }
 
