@@ -64,14 +64,15 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
   const bg = lang === 'bg';
   const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
   const dinner = c.dinnerOnly;
-  const guests = c.rooms.reduce((a, x) => ({ adults: a.adults + x.adults, children: a.children + x.children, infants: a.infants + x.infants }), { adults: 0, children: 0, infants: 0 });
-  const visibleSubtotal = totalPrice(c.product, c.room, c.nights, c.rooms, dinner);
+  const guests = dinner ? c.dinnerGuests : c.rooms.reduce((a, x) => ({ adults: a.adults + x.adults, children: a.children + x.children, infants: a.infants + x.infants }), { adults: 0, children: 0, infants: 0 });
+  const visibleSubtotal = totalPrice(c.product, c.room, c.nights, dinner ? [c.dinnerGuests] : c.rooms, dinner);
   const needsConfirmation = !dinner && c.rooms.some(x => x.adults > 2);
   const childStay = guests.children * PRICES.accommodation[c.room].double[c.nights - 1] * 0.7;
   const childGala = c.product === 'package' ? guests.children * 132 : 0;
   const changeRoom = (index: number, key: 'adults' | 'children' | 'infants', delta: number) => {
     c.setRooms(c.rooms.map((g, i) => i === index ? { ...g, [key]: Math.max(key === 'adults' ? 1 : 0, Math.min(10, g[key] + delta)) } : g));
   };
+  const changeDinnerGuest = (key: 'adults' | 'children' | 'infants', delta: number) => c.setDinnerGuests({ ...c.dinnerGuests, [key]: Math.max(key === 'adults' ? 1 : 0, Math.min(10, c.dinnerGuests[key] + delta)) });
   const product = c.product;
   const incl = product === 'accommodation' ? k.includesA : k.includesB;
   
@@ -101,13 +102,13 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
         </>}
         <fieldset><legend>{label('Гости', 'Гости')}</legend>
           {!dinner && <div className="row2"><span>{label('Номеров', 'Стаи')}</span><div className="seg"><button type="button" disabled={c.rooms.length <= 1} onClick={() => c.setRooms(c.rooms.slice(0, -1))}>−</button><output>{c.rooms.length}</output><button type="button" disabled={c.rooms.length >= 5} onClick={() => c.setRooms([...c.rooms, { adults: 1, children: 0, infants: 0 }])}>+</button></div></div>}
-          {c.rooms.map((g, i) => <div key={i}>
+          {(dinner ? [c.dinnerGuests] : c.rooms).map((g, i) => <div key={i}>
             {!dinner && c.rooms.length > 1 && <strong>{label('Номер', 'Стая')} {i + 1}</strong>}
             {([
               [label('Взрослые (12+)', 'Възрастни (12+)'), 'adults', g.adults, 1],
               [label('Дети 2–11 лет', 'Деца 2–11 г.'), 'children', g.children, 0],
               [label('Дети до 2 лет', 'Деца под 2 г.'), 'infants', g.infants, 0],
-            ] as const).map(([name, key, value, min]) => <div key={key} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => changeRoom(i, key, -1)}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => changeRoom(i, key, 1)}>+</button></div></div>)}
+            ] as const).map(([name, key, value, min]) => <div key={key} className="row2"><span>{name}</span><div className="seg"><button type="button" disabled={value <= min} onClick={() => dinner ? changeDinnerGuest(key, -1) : changeRoom(i, key, -1)}>−</button><output>{value}</output><button type="button" disabled={value >= 10} onClick={() => dinner ? changeDinnerGuest(key, 1) : changeRoom(i, key, 1)}>+</button></div></div>)}
           </div>)}
         </fieldset>
         <button type="button" className="btn calc__view-result" onClick={() => document.getElementById("calculator-result")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" })}>{label("Посмотреть стоимость ↓", "Виж цената ↓")}</button>
