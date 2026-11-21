@@ -340,3 +340,8 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 .inquiry-dialog .lead{font-size:.95rem}
 .inquiry-close{position:absolute;top:.4rem;right:.7rem;border:0;background:transparent;color:inherit;font-size:2rem;cursor:pointer;z-index:1}
 @media(max-width:760px){.hdr__contact{font-size:.72rem;margin-inline:0}.hdr__right{gap:.3rem}.hero__actions{flex-direction:column;align-items:flex-start}.inquiry-dialog{padding:1rem!important}}
+
+/* Narrow-screen header: retain phone and menu without horizontal overflow. Viber/TG remain in Contacts and footer. */
+@media(max-width:380px){.hdr__in{gap:8px}.hdr__right{gap:8px}.hdr__contact:not(:first-child){display:none}.brand{font-size:21px}.burger{flex-shrink:0}}
+.inquiry-close{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.inquiry-dialog{overscroll-behavior:contain}
