@@ -12,7 +12,7 @@ export function trackEvent(name: string, params: AnalyticsParams = {}): void {
 }
 
 // Capture intent to contact; opening an external app does not prove a completed call or email.
-// The current "Viber" labels link to tel: on the site: they are phone intents, NOT Viber events.
+// Contact events measure click intent, not completed calls or messages.
 export function installContactTracking(): () => void {
   function onClick(event: MouseEvent) {
     const node = event.target;
@@ -23,6 +23,7 @@ export function installContactTracking(): () => void {
     if (href.startsWith('tel:')) trackEvent('contact_phone_click', { contact_channel: 'phone' });
     else if (href.startsWith('mailto:')) trackEvent('contact_email_click', { contact_channel: 'email' });
     else if (href.startsWith('viber:') || href.startsWith('viber://')) trackEvent('contact_viber_click', { contact_channel: 'viber' });
+    else if (href.startsWith('https://t.me/')) trackEvent('contact_telegram_click', { contact_channel: 'telegram' });
     else if (href === '#offer-calculator') trackEvent('offer_calculator_click');
     else if (href === '#apply') trackEvent('inquiry_section_click');
   }
