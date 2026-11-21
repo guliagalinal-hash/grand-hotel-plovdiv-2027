@@ -367,3 +367,7 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 .foot__map>a{display:inline-block;margin-top:12px;font-weight:700;text-underline-offset:3px;min-height:44px;padding:8px 0}
 .foot__legal{border-top:1px solid rgba(249,246,240,.22);margin-top:32px;padding-top:24px;font-size:14px}
 @media(max-width:1000px){.foot__cols--map{grid-template-columns:1fr;gap:24px}.foot__map iframe{height:260px}}
+
+/* Starting prices in hero: compact, readable on small screens */
+.hero__starting-prices{max-width:45rem;margin:.8rem 0 .25rem;font-size:clamp(1.05rem,2.3vw,1.35rem);line-height:1.4;font-weight:750;color:var(--milk)}
+.hero__price-note{max-width:45rem;margin:0;font-size:.85rem;line-height:1.45;color:var(--milk);opacity:.9}
