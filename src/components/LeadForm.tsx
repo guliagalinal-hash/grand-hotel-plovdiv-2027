@@ -20,8 +20,8 @@ export function LeadForm() {
   const f = t.form;
   const bg = lang === 'bg';
   const label = (ru: string, bulgarian: string) => bg ? bulgarian : ru;
-  const guests = c.rooms.reduce((a, g) => ({ adults: a.adults + g.adults, children: a.children + g.children, infants: a.infants + g.infants }), { adults: 0, children: 0, infants: 0 });
-  const calculatedTotal = totalPrice(c.product, c.room, c.nights, c.rooms, c.dinnerOnly);
+  const guests = c.dinnerOnly ? c.dinnerGuests : c.rooms.reduce((a, g) => ({ adults: a.adults + g.adults, children: a.children + g.children, infants: a.infants + g.infants }), { adults: 0, children: 0, infants: 0 });
+  const calculatedTotal = totalPrice(c.product, c.room, c.nights, c.dinnerOnly ? [c.dinnerGuests] : c.rooms, c.dinnerOnly);
   const placementNeedsCheck = !c.dinnerOnly && c.rooms.some(g => g.adults > 2);
   const offerName = c.dinnerOnly ? label('Только гала-ужин', 'Само гала вечеря') : c.product === 'package' ? label('Проживание с гала-ужином', 'Нощувки с гала вечеря') : label('Проживание без гала-ужина', 'Нощувки без гала вечеря');
   const [isOpen, setIsOpen] = useState(false);
