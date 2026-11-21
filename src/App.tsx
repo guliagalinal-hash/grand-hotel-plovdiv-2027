@@ -12,9 +12,9 @@ export function App() {
       <Header />
       <main id="main">
         <Hero />
+        <Offers />
         <Advantages />
         <Program />
-        <Offers />
         <RoomsSection />
         <SpaSection />
         <DiningSection />

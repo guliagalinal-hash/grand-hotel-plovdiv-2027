@@ -146,6 +146,7 @@ export function ContactCard({ id }: { id?: string }) {
       <ul className="contact__list">
         <li><span>{c.phone}</span><a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></li>
         <li><span>{c.viber}</span><a href={`viber://chat?number=${encodeURIComponent(k.phoneRaw)}`}>{k.phoneDisplay}</a></li>
+        <li><span>Telegram</span><a href={k.telegramUrl} target="_blank" rel="noopener noreferrer">@globacheva</a></li>
         <li><span>{c.email}</span><a href={`mailto:${k.email}`}>{k.email}</a></li>
       </ul>
       <div className="contact__btns">
@@ -174,6 +175,7 @@ export function Footer() {
             <p className="foot__sub">{c.title}</p>
             <p><span>{c.phone}:</span> <a href={`tel:${k.phoneRaw}`}>{k.phoneDisplay}</a></p>
             <p><span>{c.viber}:</span> <a href={`viber://chat?number=${encodeURIComponent(k.phoneRaw)}`}>{k.phoneDisplay}</a></p>
+            <p><span>Telegram:</span> <a href={k.telegramUrl} target="_blank" rel="noopener noreferrer">@globacheva</a></p>
             <p><span>{c.email}:</span> <a href={`mailto:${k.email}`}>{k.email}</a></p>
           </div>
           {(filled.length > 0 || s.privacyUrl) && (

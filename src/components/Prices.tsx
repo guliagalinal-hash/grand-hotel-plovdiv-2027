@@ -5,7 +5,7 @@ import { eur, NIGHTS, OCCS, PRICES, ROOMS, totalPrice, type ProductId, type Room
 const ROOM_LABEL: Record<RoomId, string> = { classic: 'Classic', comfort: 'Comfort', lux: 'Lux' };
 
 export function Offers() {
-  const { t } = useSite();
+  const { t, lang } = useSite();
   const c = useCalc();
   const o = t.offers;
   const [open, setOpen] = useState(false);
@@ -23,7 +23,8 @@ export function Offers() {
           <p className="lead">{o.lead}</p>
         </div>
 
-        <div className="offers">
+        <p className="offers__children">{lang === 'bg' ? 'Деца под 2 години безплатно; деца от 2 до 11 години включително — с отстъпка. Точните условия са в калкулатора.' : 'Дети до 2 лет бесплатно; дети от 2 до 11 лет включительно — со скидкой. Точные условия — в калькуляторе.'}</p>
+        <div className="offers offers--compact">
           {(['accommodation', 'package'] as const).map((p) => {
             const copy = p === 'accommodation' ? o.A : o.B;
             const sel = !c.dinnerOnly && c.product === p;
@@ -43,7 +44,7 @@ export function Offers() {
             <p className="offer__price">{o.C.price}</p>
             <p className="offer__per">{o.C.per}</p>
             <p className="offer__desc">{o.C.desc}</p>
-            <button type="button" className="btn btn--outline" aria-pressed={c.dinnerOnly} onClick={() => { c.setDinnerOnly(true); goToCalculator(); }}>{c.dinnerOnly ? o.picked : o.pick}</button>
+            <button type="button" className="btn btn--outline" onClick={() => { c.setDinnerOnly(true); requestAnimationFrame(() => window.dispatchEvent(new Event('open-calculator-inquiry'))); }}>{lang === 'bg' ? 'Изпрати запитване' : 'Отправить заявку'}</button>
           </article>
         </div>
 
@@ -130,7 +131,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           <button type="button" className="btn btn--lg btn--toggle" aria-expanded={open} aria-controls="all-prices" onClick={onToggle}>
             {k.showAll}<span className="chev" aria-hidden="true" />
           </button>
-          <a className="btn btn--outline" href="#apply">{label("Отправить заявку", "Изпрати запитване")}</a>
+          <button type="button" className="btn btn--outline" onClick={() => window.dispatchEvent(new Event('open-calculator-inquiry'))}>{label("Отправить заявку", "Изпрати запитване")}</button>
         </div>}
       </div>
     </div>
