@@ -366,4 +366,4 @@ form{background:rgba(13,31,40,.55);border:1px solid rgba(184,140,112,.5);padding
 .foot__map iframe{display:block;width:100%;height:280px;border:0;border-radius:8px;background:var(--sand)}
 .foot__map>a{display:inline-block;margin-top:12px;font-weight:700;text-underline-offset:3px;min-height:44px;padding:8px 0}
 .foot__legal{border-top:1px solid rgba(249,246,240,.22);margin-top:32px;padding-top:24px;font-size:14px}
-@media(max-width:760px){.foot__cols--map{grid-template-columns:1fr;gap:24px}.foot__map iframe{height:260px}}
+@media(max-width:1000px){.foot__cols--map{grid-template-columns:1fr;gap:24px}.foot__map iframe{height:260px}}
