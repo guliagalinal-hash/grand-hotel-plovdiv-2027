@@ -23,7 +23,7 @@ export function Offers() {
           <p className="lead">{o.lead}</p>
         </div>
 
-        <div className="offers">
+        <div className="offers offers--compact">
           {(['accommodation', 'package'] as const).map((p) => {
             const copy = p === 'accommodation' ? o.A : o.B;
             const sel = !c.dinnerOnly && c.product === p;
@@ -130,7 +130,7 @@ export function Calculator({ open = false, onToggle, compact = false }: { open?:
           <button type="button" className="btn btn--lg btn--toggle" aria-expanded={open} aria-controls="all-prices" onClick={onToggle}>
             {k.showAll}<span className="chev" aria-hidden="true" />
           </button>
-          <a className="btn btn--outline" href="#apply">{label("Отправить заявку", "Изпрати запитване")}</a>
+          <button type="button" className="btn btn--outline" onClick={() => window.dispatchEvent(new Event('open-calculator-inquiry'))}>{label("Отправить заявку", "Изпрати запитване")}</button>
         </div>}
       </div>
     </div>
