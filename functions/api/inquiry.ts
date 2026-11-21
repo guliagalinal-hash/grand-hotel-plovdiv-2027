@@ -51,7 +51,7 @@ const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 const clean = (s: unknown, max: number) => (typeof s === 'string' ? s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, max) : '');
 const oneLine = (s: string) => s.replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
-interface Booking { product: 'accommodation' | 'package' | 'dinner'; nights: number | null; room: string | null; occupancy: string | null; adults: number; children: number; infants: number; estimatedTotal: number | null; rooms?: { adults: number; children: number; infants: number }[] }
+interface Booking { product: 'accommodation' | 'package' | 'dinner' | 'inquiry'; nights: number | null; room: string | null; occupancy: string | null; adults: number; children: number; infants: number; estimatedTotal: number | null; rooms?: { adults: number; children: number; infants: number }[] }
 interface Inquiry { booking: Booking; name: string; email: string; phone: string; comment: string; pageLang: 'ru' | 'bg'; submissionId: string; token: string }
 
 function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: string } {
@@ -59,7 +59,7 @@ function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: str
   const r = raw as Record<string, unknown>;
   if (clean(r.website, 50)) return { ok: false, field: 'website' }; // honeypot
   const name = clean(r.name, 100); if (name.length < 2) return { ok: false, field: 'name' };
-  const email = clean(r.email, 254); if (!EMAIL_RE.test(email)) return { ok: false, field: 'email' };
+  const email = clean(r.email, 254); if (email && !EMAIL_RE.test(email)) return { ok: false, field: 'email' };
   const phone = clean(r.phone, 25); const digits = phone.replace(/\D/g, '');
   if (!PHONE_RE.test(phone) || digits.length < 6 || digits.length > 15) return { ok: false, field: 'phone' };
   const comment = clean(r.comment, 2000);
@@ -68,22 +68,23 @@ function parse(raw: unknown): { ok: true; d: Inquiry } | { ok: false; field: str
   const submissionId = clean(r.submissionId, 64); if (!/^[A-Za-z0-9-]{8,64}$/.test(submissionId)) return { ok: false, field: 'submissionId' };
   const token = '';
   const b = r.booking as Record<string, unknown> | undefined;
-  if (!b || !['accommodation', 'package', 'dinner'].includes(String(b.product))) return { ok: false, field: 'booking.product' };
-  if (![b.adults, b.children, b.infants].every(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 10) || (b.adults as number) < 1) return { ok: false, field: 'booking.guests' };
-  if (b.product !== 'dinner' && (![1,2,3,4].includes(Number(b.nights)) || !['classic','comfort','lux'].includes(String(b.room)) || !['double','single'].includes(String(b.occupancy)))) return { ok: false, field: 'booking.room' };
-  const roomGuests = b.product === 'dinner' ? [] : b.rooms;
-  if (b.product !== 'dinner' && (!Array.isArray(roomGuests) || roomGuests.length < 1 || roomGuests.length > 5 ||
+  if (!b || !['accommodation', 'package', 'dinner', 'inquiry'].includes(String(b.product))) return { ok: false, field: 'booking.product' };
+  if (b.product !== 'inquiry' && ![b.adults, b.children, b.infants].every(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 10) || (b.product !== 'inquiry' && (b.adults as number) < 1)) return { ok: false, field: 'booking.guests' };
+  if (b.product !== 'dinner' && b.product !== 'inquiry' && (![1,2,3,4].includes(Number(b.nights)) || !['classic','comfort','lux'].includes(String(b.room)) || !['double','single'].includes(String(b.occupancy)))) return { ok: false, field: 'booking.room' };
+  const roomGuests = b.product === 'dinner' || b.product === 'inquiry' ? [] : b.rooms;
+  if (b.product !== 'dinner' && b.product !== 'inquiry' && (!Array.isArray(roomGuests) || roomGuests.length < 1 || roomGuests.length > 5 ||
     !roomGuests.every(g => g && typeof g === 'object' && ['adults','children','infants'].every(k => Number.isInteger(g[k]) && g[k] >= (k === 'adults' ? 1 : 0) && g[k] <= 10)) ||
     roomGuests.reduce((n, g) => n + g.adults, 0) !== b.adults ||
     roomGuests.reduce((n, g) => n + g.children, 0) !== b.children ||
     roomGuests.reduce((n, g) => n + g.infants, 0) !== b.infants)) return { ok: false, field: 'booking.rooms' };
-  const booking: Booking = { product: b.product as Booking['product'], nights: b.product === 'dinner' ? null : Number(b.nights), room: b.product === 'dinner' ? null : String(b.room), occupancy: b.product === 'dinner' ? null : String(b.occupancy), adults: Number(b.adults), children: Number(b.children), infants: Number(b.infants), estimatedTotal: null, rooms: b.product === 'dinner' ? [] : roomGuests as Booking['rooms'] };
+  const booking: Booking = { product: b.product as Booking['product'], nights: (b.product === 'dinner' || b.product === 'inquiry') ? null : Number(b.nights), room: b.product === 'dinner' ? null : String(b.room), occupancy: b.product === 'dinner' ? null : String(b.occupancy), adults: Number(b.adults), children: Number(b.children), infants: Number(b.infants), estimatedTotal: null, rooms: (b.product === 'dinner' || b.product === 'inquiry') ? [] : roomGuests as Booking['rooms'] };
   // Recompute prices on the server; never trust a client-supplied total.
   const rates: Record<string, Record<string, Record<string, number[]>>> = {
     accommodation: { classic: { double: [71.65,121.79,182.69,207.06], single: [119.65,182.69,274.04,310.59] }, comfort: { double: [83.59,142.1,213.16,241.57], single: [139.59,213.15,319.73,362.35] }, lux: { double: [95.53,162.39,243.59,276.08], single: [159.53,243.58,365.37,414.12] } },
     package: { classic: { double: [280.9,323.52,375.28,396], single: [321.7,375.29,452.93,484] }, comfort: { double: [291.05,340.79,401.18,425.33], single: [338.65,401.18,491.77,528] }, lux: { double: [301.2,358.03,427.05,454.67], single: [355.6,427.04,530.57,572] } },
   };
-  if (booking.product === 'dinner') booking.estimatedTotal = booking.adults * 220 + booking.children * 132;
+  if (booking.product === 'inquiry') booking.estimatedTotal = null;
+  else if (booking.product === 'dinner') booking.estimatedTotal = booking.adults * 220 + booking.children * 132;
   else {
     const i = booking.nights! - 1;
     const raw = booking.rooms!.reduce((sum, g) => {
