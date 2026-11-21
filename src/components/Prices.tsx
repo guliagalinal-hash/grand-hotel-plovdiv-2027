@@ -5,7 +5,7 @@ import { eur, NIGHTS, OCCS, PRICES, ROOMS, totalPrice, type ProductId, type Room
 const ROOM_LABEL: Record<RoomId, string> = { classic: 'Classic', comfort: 'Comfort', lux: 'Lux' };
 
 export function Offers() {
-  const { t } = useSite();
+  const { t, lang } = useSite();
   const c = useCalc();
   const o = t.offers;
   const [open, setOpen] = useState(false);
@@ -23,7 +23,7 @@ export function Offers() {
           <p className="lead">{o.lead}</p>
         </div>
 
-        <p className="offers__children">{t.htmlLang === 'bg' ? 'Деца под 2 години безплатно; деца от 2 до 11 години включително — с отстъпка. Точните условия са в калкулатора.' : 'Дети до 2 лет бесплатно; дети от 2 до 11 лет включительно — со скидкой. Точные условия — в калькуляторе.'}</p>
+        <p className="offers__children">{lang === 'bg' ? 'Деца под 2 години безплатно; деца от 2 до 11 години включително — с отстъпка. Точните условия са в калкулатора.' : 'Дети до 2 лет бесплатно; дети от 2 до 11 лет включительно — со скидкой. Точные условия — в калькуляторе.'}</p>
         <div className="offers offers--compact">
           {(['accommodation', 'package'] as const).map((p) => {
             const copy = p === 'accommodation' ? o.A : o.B;
